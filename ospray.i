@@ -140,6 +140,12 @@
 	}
 }
 
+%pythoncode %{
+def ospNewData(type, source, flags):
+	return _ospray.ospNewData((type, source, flags))
+%}
+
+
 %include "carrays.i"
 %array_class(unsigned char, ospByteBuffer)
 
@@ -181,8 +187,3 @@ void
 ospWritePPM(const char *filename,
             const osp_vec2i *size,
             const OSPFrameBuffer framebuffer);
-
-%pythoncode %{
-def ospNewData(type, source, flags):
-	return _ospray.ospNewData((type, source, flags))
-%}
