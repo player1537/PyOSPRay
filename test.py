@@ -55,7 +55,7 @@ def main():
 
 	with committing(SciVis()) as renderer:
 		renderer.spp = 4
-		renderer.bgColor = 1.0
+		renderer.bgColor = 0.5
 		renderer.model = world
 		renderer.camera = camera
 		
@@ -73,7 +73,11 @@ def main():
 	with releasing(FrameBuffer(size, OSP_FB_SRGBA, OSP_FB_COLOR)) as fb:
 		fb.clear(OSP_FB_COLOR)
 		renderer.render(fb, OSP_FB_COLOR)
-		fb.writePPM('out.ppm')
+		buffer = ospByteBuffer(WIDTH * HEIGHT * 3)
+		ospToPixels("rgb", size, fb._ospray_object, buffer)
+		print(f'[0] = {buffer[0]}')
+		print(f'[1] = {buffer[1]}')
+		print(f'[2] = {buffer[2]}')
 
 	print('all good')
 

@@ -140,10 +140,6 @@
 	}
 }
 
-
-%include "carrays.i"
-%array_class(unsigned char, ospByteBuffer)
-
 %include "ospray.h"
 %include "OSPDataType.h"
 
@@ -188,3 +184,44 @@ void
 ospWritePPM(const char *filename,
             const osp_vec2i *size,
             const OSPFrameBuffer framebuffer);
+
+%{
+void
+ospToPixels(const char *format,
+            const osp_vec2i *size,
+            const OSPFrameBuffer framebuffer,
+            unsigned char *buffer) {
+  int is_rgb, is_rgba;
+  size_t index;
+  
+  is_rgb = strcmp(format, "rgb") == 0;
+  is_rgba = strcmp(format, "rgba") == 0;
+  
+  const uint32_t *pixel = (uint32_t *)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
+  
+  index = 0;
+  for (int y = 0; y < size->y; y++) {
+    const unsigned char *in = (const unsigned char *)&pixel[(size->y-1-y)*size->x];
+    for (int x = 0; x < size->x; x++) {
+      if (is_rgb || is_rgba) {
+        buffer[index++] = in[4*x + 0];
+        buffer[index++] = in[4*x + 0];
+        buffer[index++] = in[4*x + 0];
+      }
+      if (is_rgba) {
+        buffer[index++] = in[4*x + 0];
+      }
+    }
+  }
+  ospUnmapFrameBuffer(pixel, framebuffer);
+}
+%}
+
+void
+ospToPixels(const char *format,
+            const osp_vec2i *size,
+            const OSPFrameBuffer framebuffer,
+            unsigned char *buffer);
+
+%include "carrays.i"
+%array_class(unsigned char, ospByteBuffer)
