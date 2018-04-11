@@ -224,4 +224,5 @@ ospToPixels(const char *format,
             unsigned char *buffer);
 
 %include "carrays.i"
+%include "cdata.i"
 %array_class(unsigned char, ospByteBuffer)
