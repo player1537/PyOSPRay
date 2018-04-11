@@ -11,7 +11,7 @@ run: .mk.depend
 .PHONY: depend
 depend: .mk.depend
 
-.mk.depend: setup.py ospray.py ospray_wrap.c
+.mk.depend: setup.py
 	python3.6 -m virtualenv venv
 	./venv/bin/pip install -e .
 	touch $@

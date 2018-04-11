@@ -4,32 +4,30 @@ from distutils.core import setup, Extension
 from pathlib import Path
 
 
-ospray_module = Extension(
-	'_ospray',
-	sources=['ospray_wrap.c'],
-	library_dirs=['/usr/local/lib'],
+pyospray_module = Extension(
+	'_pyospray',
+	sources=['pyospray/pyospray.i'],
+	swig_opts=['-I/usr/include/ospray'],
 	libraries=['ospray'],
-	runtime_library_dirs=['/usr/local/lib'],
 )
 
 
 setup(
-	name='vision',
-	version='1.0',
-	description="The Shepherd's Vision: OSPRay Scene Manager",
+	name='pyospray',
+	packages=['pyospray'],
+	version='0.1.0',
+	description="Python wrapper around the OSPRay renderer with both the native and a Pythonic API",
 	author='Tanner Hobson',
 	author_email='thobson2@vols.utk.edu',
-	packages=[],
-	install_requires=[
+	url='https://github.com/player1537/pyospray',
+	keywords=[
+		'path-tracer',
+		'ospray',
+		'ray-tracing',
+		'visualization',
+		'renderering',
 	],
 	ext_modules=[
-		ospray_module,
+		pyospray_module,
 	],
-	py_modules=[
-		'ospray',
-	],
-	entry_points={
-		'console_scripts': [
-		],
-	},
 )
