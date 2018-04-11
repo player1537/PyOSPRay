@@ -206,11 +206,11 @@ ospToPixels(const char *format,
     for (int x = 0; x < size->x; x++) {
       if (is_rgb || is_rgba) {
         buffer[index++] = in[4*x + 0];
-        buffer[index++] = in[4*x + 0];
-        buffer[index++] = in[4*x + 0];
+        buffer[index++] = in[4*x + 1];
+        buffer[index++] = in[4*x + 2];
       }
       if (is_rgba) {
-        buffer[index++] = in[4*x + 0];
+        buffer[index++] = in[4*x + 3];
       }
     }
   }
