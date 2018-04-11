@@ -17,7 +17,7 @@ class build(_build):
 pyospray_module = Extension(
 	'_pyospray',
 	sources=['pyospray/pyospray.i'],
-	swig_opts=['-I/usr/include/ospray'],
+	swig_opts=['-py3', '-I/usr/include/ospray'],
 	libraries=['ospray'],
 )
 
