@@ -77,7 +77,7 @@ class Committer(object):
 	
 	@staticmethod
 	def normalize_name(name):
-		return name.replace('__', '.')
+		return name.replace('__', '.').encode('ascii')
 	
 	@staticmethod
 	def get_ospray_setter(type):
@@ -147,10 +147,10 @@ class Committer(object):
 
 
 class Volume(ManagedObject):
-	volume_type = None
+	variant = None
 	
 	def get_ospray_object(self):
-		return ospNewVolume(self.volume_type)
+		return ospNewVolume(self.variant)
 	
 	voxelRange = Committer('vec2f')
 	gradientShadingEnabled = Committer('bool')
@@ -166,7 +166,7 @@ class Volume(ManagedObject):
 
 
 class StructuredVolume(Volume):
-	volume_type = 'shared_structure_volume'
+	variant = b'shared_structure_volume'
 	
 	dimensions = Committer('vec3i')
 	voxelType = Committer('string')
@@ -176,7 +176,7 @@ class StructuredVolume(Volume):
 
 
 class AMRVolume(Volume):
-	volume_type = 'amr_volume'
+	variant = b'amr_volume'
 	
 	gridOrigin = Committer('vec3f')
 	gridSpacing = Committer('vec3f')
@@ -187,7 +187,7 @@ class AMRVolume(Volume):
 
 
 class UnstructuredVolume(Volume):
-	volume_type = 'unstructured_volume'
+	variant = b'unstructured_volume'
 	
 	vertices = Committer('vec3f[]')
 	field = Committer('float[]')
@@ -203,7 +203,7 @@ class TransferFunction(ManagedObject):
 
 
 class PiecewiseLinear(TransferFunction):
-	variant = 'piecewise_linear'
+	variant = b'piecewise_linear'
 	
 	colors = Committer('vec3f[]')
 	opacities = Committer('float[]')
@@ -221,7 +221,7 @@ class Geometry(ManagedObject):
 	
 
 class TriangleMesh(Geometry):
-	variant = 'triangles'
+	variant = b'triangles'
 	
 	vertex = Committer('vec3f(a)[]')
 	vertex__normal = Committer('vec3f(a)[]')
@@ -231,7 +231,7 @@ class TriangleMesh(Geometry):
 
 
 class Spheres(Geometry):
-	variant = 'spheres'
+	variant = b'spheres'
 	
 	radius = Committer('float')
 	spheres = Committer('OSPData')
@@ -243,7 +243,7 @@ class Spheres(Geometry):
 
 
 class Cylinders(Geometry):
-	variant = 'cylinders'
+	variant = b'cylinders'
 	
 	radius = Committer('float')
 	cylinders = Committer('OSPData')
@@ -256,7 +256,7 @@ class Cylinders(Geometry):
 
 
 class Streamlines(Geometry):
-	variant = 'streamlines'
+	variant = b'streamlines'
 	
 	radius = Committer('float')
 	smooth = Committer('bool')
@@ -267,14 +267,14 @@ class Streamlines(Geometry):
 
 
 class Isosurfaces(Geometry):
-	variant = 'isosurfaces'
+	variant = b'isosurfaces'
 	
 	isovalues = Committer('float[]')
 	volume = Committer('OSPVolume')
 
 
 class Slices(Geometry):
-	variant = 'slices'
+	variant = b'slices'
 	
 	planes = Committer('vec4f[]')
 	volume = Committer('OSPVolume')
@@ -310,7 +310,7 @@ class Renderer(ManagedObject):
 
 
 class SciVis(Renderer):
-	variant = 'scivis'
+	variant = b'scivis'
 	
 	shadowsEnabled = Committer('bool')
 	aoSamples = Committer('int')
@@ -322,7 +322,7 @@ class SciVis(Renderer):
 
 
 class PathTracer(Renderer):
-	variant = 'pathtracer'
+	variant = b'pathtracer'
 	
 	rouletteDepth = Committer('int')
 	maxContribution = Committer('float')
@@ -364,21 +364,21 @@ class Light(ManagedObject):
 
 
 class DirectionalLight(Light):
-	variant = 'distant'
+	variant = b'distant'
 	
 	direction = Committer('vec3f(a)')
 	angularDiameter = Committer('float')
 
 
 class PointLight(Light):
-	variant = 'sphere'
+	variant = b'sphere'
 	
 	position = Committer('vec3f(a)')
 	radius = Committer('float')
 
 
 class SpotLight(Light):
-	variant = 'spot'
+	variant = b'spot'
 	
 	position = Committer('vec3f(a)')
 	direction = Committer('vec3f(a)')
@@ -388,7 +388,7 @@ class SpotLight(Light):
 
 
 class QuadLight(Light):
-	variant = 'quad'
+	variant = b'quad'
 
 	position = Committer('vec3f(a)')
 	edge1 = Committer('vec3f(a)')
@@ -396,7 +396,7 @@ class QuadLight(Light):
 
 
 class HDRILight(Light):
-	variant = 'hdri'
+	variant = b'hdri'
 	
 	up = Committer('vec3f(a)')
 	dir = Committer('vec3f(a)')
@@ -404,7 +404,7 @@ class HDRILight(Light):
 
 
 class AmbientLight(Light):
-	variant = 'ambient'
+	variant = b'ambient'
 
 
 class Material(ManagedObject):
@@ -424,7 +424,7 @@ class Material(ManagedObject):
 
 
 class OBJMaterial(Material):
-	variant = 'OBJMaterial'
+	variant = b'OBJMaterial'
 
 	Kd = Committer('vec3f')
 	Ks = Committer('vec3f')
@@ -435,7 +435,7 @@ class OBJMaterial(Material):
 
 
 class MetalMaterial(Material):
-	variant = 'Metal'
+	variant = b'Metal'
 	
 	ior = Committer('vec3f[]')
 	eta = Committer('vec3f')
@@ -444,7 +444,7 @@ class MetalMaterial(Material):
 
 
 class AlloyMaterial(Material):
-	variant = 'Alloy'
+	variant = b'Alloy'
 	
 	color = Committer('vec3f')
 	edgeColor = Committer('vec3f')
@@ -452,7 +452,7 @@ class AlloyMaterial(Material):
 
 
 class GlassMaterial(Material):
-	variant = 'Glass'
+	variant = b'Glass'
 	
 	eta = Committer('float')
 	attenuationColor = Committer('vec3f')
@@ -460,7 +460,7 @@ class GlassMaterial(Material):
 
 
 class ThinGlassMaterial(Material):
-	variant = 'ThinGlass'
+	variant = b'ThinGlass'
 	
 	eta = Committer('float')
 	attenuationColor = Committer('vec3f')
@@ -469,7 +469,7 @@ class ThinGlassMaterial(Material):
 
 
 class MetallicPaintMaterial(Material):
-	variant = 'MetallicPaint'
+	variant = b'MetallicPaint'
 	
 	baseColor = Committer('vec3f')
 	flakeAmount = Committer('float')
@@ -479,7 +479,7 @@ class MetallicPaintMaterial(Material):
 
 
 class LuminousMaterial(Material):
-	variant = 'Luminous'
+	variant = b'Luminous'
 
 
 class Texture(ManagedObject):
@@ -512,7 +512,7 @@ class Camera(ManagedObject):
 
 
 class PerspectiveCamera(Camera):
-	variant = 'perspective'
+	variant = b'perspective'
 	
 	fovy = Committer('float')
 	aspect = Committer('float')
@@ -524,14 +524,14 @@ class PerspectiveCamera(Camera):
 
 
 class OrthographicCamera(Camera):
-	variant = 'orthographic'
+	variant = b'orthographic'
 	
 	height = Committer('float')
 	aspect = Committer('float')
 
 
 class PanoramicCamera(Camera):
-	variant = 'panoramic'
+	variant = b'panoramic'
 
 
 class FrameBuffer(ManagedObject):
@@ -560,7 +560,7 @@ class PixelOp(ManagedObject):
 
 
 class ToneMapper(PixelOp):
-	variant = 'tonemapper'
+	variant = b'tonemapper'
 	
 	contrast = Committer('float')
 	shoulder = Committer('float')

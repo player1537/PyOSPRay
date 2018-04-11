@@ -1,6 +1,7 @@
 %module pyospray
 %{
 #define SWIG_FILE_WITH_INIT
+#define SWIG_PYTHON_STRICT_BYTE_CHAR
 #include <ospray/ospray.h>
 
 %}
