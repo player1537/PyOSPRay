@@ -5,7 +5,6 @@
 
 from pyospray import *
 
-
 WIDTH = 1024
 HEIGHT = 512
 

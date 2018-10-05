@@ -578,4 +578,4 @@ class Data(ManagedObject):
 		self._flags = flags
 	
 	def get_ospray_object(self):
-		return ospNewData(self._type, self._data, self._flags)
+		return ospNewData((self._type, self._data, self._flags))

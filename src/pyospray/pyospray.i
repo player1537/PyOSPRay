@@ -145,12 +145,6 @@
 %include "OSPDataType.h"
 
 
-%pythoncode %{
-def ospNewData(type, source, flags):
-	return _pyospray.ospNewData((type, source, flags))
-%}
-
-
 %{
 void
 ospWritePPM(const char *filename,

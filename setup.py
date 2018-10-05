@@ -16,7 +16,7 @@ class build(_build):
 
 pyospray_module = Extension(
 	'_pyospray',
-	sources=['pyospray/pyospray.i'],
+	sources=['src/pyospray/pyospray.i'],
 	swig_opts=['-py3', '-I/usr/include/ospray'],
 	libraries=['ospray'],
 )
@@ -26,6 +26,7 @@ setup(
 	cmdclass={'build': build},
 	name='pyospray',
 	packages=['pyospray'],
+	package_dir={'pyospray': 'src/pyospray'},
 	version='0.1.0',
 	description="Python wrapper around the OSPRay renderer with both the native and a Pythonic API",
 	author='Tanner Hobson',
