@@ -2,24 +2,26 @@
 
 tag=pyospray:latest
 
-_build() {
+build() {
 	docker build -t $tag .
 }
 
-_run() {
-	docker run -it --rm -v $PWD:$PWD -w $PWD -u $(id -u):$(id -g) $tag "$@"
+run() {
+	docker run -i --network host -a stdin -a stdout -a stderr --sig-proxy=true --rm -u $(id -u):$(id -g) -v $PWD:$PWD -w $PWD $tag "$@"
+
 }
 
-_inspect() {
+python() {
+	run python3.7 -u "$@"
+}
+
+inspect() {
 	docker run -it --rm --entrypoint bash $tag "$@"
 }
 
-arg=$1
-shift
-case "$arg" in
-(_build) _build "$@";;
-(_run) _run "$@";;
-(_inspect) _inspect "$@";;
-(_notebook) _notebook "$@";;
-(*) _run "$arg" "$@";;
-esac
+: ${0##*/}
+if [ "$_" = "pyospray" ]; then
+	python "$@"
+else
+	"$@"
+fi

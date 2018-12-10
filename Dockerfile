@@ -1,4 +1,4 @@
-FROM ubuntu:bionic
+FROM ubuntu:bionic AS builder
 
 RUN apt-get update && apt-get install -y \
 	python3.7 \
@@ -14,5 +14,10 @@ WORKDIR /opt/pyospray
 COPY . .
 RUN python3.7 -m pip install .
 
-ENTRYPOINT ["python3.7"]
+ENTRYPOINT []
 CMD []
+
+FROM builder AS user
+
+RUN python3.7 -m pip install \
+	mss

@@ -185,12 +185,21 @@ void
 ospToPixels(const char *format,
             const osp_vec2i *size,
             const OSPFrameBuffer framebuffer,
-            unsigned char *buffer) {
+            char **buffer,
+            int *buflen) {
   int is_rgb, is_rgba;
   size_t index;
   
   is_rgb = strcmp(format, "rgb") == 0;
   is_rgba = strcmp(format, "rgba") == 0;
+  
+  if (is_rgb) {
+  	*buflen = size->x * size->y * 3;
+  } else if (is_rgba) {
+  	*buflen = size->x * size->y * 4;
+  }
+  
+  *buffer = malloc(*buflen);
   
   const uint32_t *pixel = (uint32_t *)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
   
@@ -199,12 +208,12 @@ ospToPixels(const char *format,
     const unsigned char *in = (const unsigned char *)&pixel[(size->y-1-y)*size->x];
     for (int x = 0; x < size->x; x++) {
       if (is_rgb || is_rgba) {
-        buffer[index++] = in[4*x + 0];
-        buffer[index++] = in[4*x + 1];
-        buffer[index++] = in[4*x + 2];
+        buffer[0][index++] = in[4*x + 0];
+        buffer[0][index++] = in[4*x + 1];
+        buffer[0][index++] = in[4*x + 2];
       }
       if (is_rgba) {
-        buffer[index++] = in[4*x + 3];
+        buffer[0][index++] = in[4*x + 3];
       }
     }
   }
@@ -212,11 +221,13 @@ ospToPixels(const char *format,
 }
 %}
 
+%include "cstring.i"
+%cstring_output_allocate_size(char **buffer, int *buflen, free(*$1));
 void
 ospToPixels(const char *format,
             const osp_vec2i *size,
             const OSPFrameBuffer framebuffer,
-            unsigned char *buffer);
+            char **buffer, int *buflen);
 
 %include "carrays.i"
 %include "cdata.i"
