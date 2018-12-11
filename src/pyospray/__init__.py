@@ -572,10 +572,8 @@ class ToneMapper(PixelOp):
 class Data(ManagedObject):
 	def __init__(self, type, data, flags):
 		self._type = type
-		if any(hasattr(d, '_ospray_object') for d in data):
-			data = [x._ospray_object for x in data]
 		self._data = data
 		self._flags = flags
 	
 	def get_ospray_object(self):
-		return ospNewData((self._type, self._data, self._flags))
+		return ospNewData((self._type, self._data), self._flags)

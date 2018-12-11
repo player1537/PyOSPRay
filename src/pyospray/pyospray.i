@@ -6,6 +6,12 @@
 
 %}
 
+%include "numpy.i"
+%init %{
+import_array();
+%}
+
+
 %typemap(in) (int *argc, const char **argv) {
   /* Check if is a list */
   if (PyList_Check($input)) {
@@ -44,6 +50,81 @@
 	$1 = (int32_t)PyInt_AsLong($input);
 }
 
+%typemap(in, fragment="NumPy_Fragments") (size_t numItems, OSPDataType, const void *source) {
+	PyObject *pyType, *pySource, *pyObj;
+	SwigPyObject *swigObj;
+	PyArrayObject *pyArray;
+	int i, len;
+	struct { int type; int div; } spec;
+	
+	if (!PyTuple_Check($input)) {
+		PyErr_SetString(PyExc_TypeError, "not a list");
+		SWIG_fail;
+	}
+	
+	if (PyTuple_Size($input) != 2) {
+		PyErr_SetString(PyExc_TypeError, "not exactly 2 arguments");
+		SWIG_fail;
+	}
+	
+	pyType = PyTuple_GetItem($input, 0);
+	pySource = PyTuple_GetItem($input, 1);
+	
+	if (!PyInt_Check(pyType)) {
+		PyErr_SetString(PyExc_TypeError, "type not an int");
+		SWIG_fail;
+	}
+	$2 = ($2_ltype)PyInt_AsLong(pyType);
+	
+	if ($2 == OSP_FLOAT3A) { spec.type = NPY_FLOAT32; spec.div = 4; }
+	else if ($2 == OSP_FLOAT4) { spec.type = NPY_FLOAT32; spec.div = 4; }
+	else if ($2 == OSP_INT3) { spec.type = NPY_INT32; spec.div = 3; }
+	else if ($2 == OSP_LIGHT) { spec.type = NPY_OBJECT; spec.div = 1; }
+	else {
+		printf("%d\n", $2);
+		PyErr_SetString(PyExc_TypeError, "unimplemented OSPDataType");
+		SWIG_fail;
+	}
+	
+	pyArray = obj_to_array_no_conversion(pySource, spec.type);
+	if (pyArray == NULL) {
+		SWIG_fail;
+	}
+	
+	if (!require_contiguous(pyArray)) {
+		SWIG_fail;
+	}
+	
+	if (!require_native(pyArray)) {
+		SWIG_fail;
+	}
+	
+	if (!require_dimensions(pyArray, 1)) {
+		SWIG_fail;
+	}
+	
+	$3 = array_data(pySource);
+	
+	if ($2 == OSP_LIGHT) {
+		len = array_size(pyArray, 0);
+		PyObject **po, *obj, *ospObj;
+		SwigPyObject **so;
+		po = $3;
+		so = malloc(len * sizeof(void *));
+		for (i=0; i<len; ++i) {
+			obj = *po++;
+			ospObj = PyObject_GetAttrString(obj, "_ospray_object");
+			if (ospObj == NULL) {
+				PyErr_SetString(PyExc_TypeError, "Object has no _ospray_object");
+				SWIG_fail;
+			}
+			*so++ = SWIG_Python_GetSwigThis(ospObj);
+		}
+		$3 = so;
+	}
+}
+
+/*
 %typemap(in) (size_t numItems, OSPDataType, const void *source, const uint32_t dataCreationFlags) {
 	PyObject *pyType, *pySource, *pyFlags, *o;
 	SwigPyObject *sobj;
@@ -140,6 +221,7 @@
 		}
 	}
 }
+*/
 
 %include "ospray.h"
 %include "OSPDataType.h"

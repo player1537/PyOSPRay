@@ -5,6 +5,11 @@ from distutils.command.build import build as _build
 from pathlib import Path
 
 
+# Thanks https://scipy-cookbook.readthedocs.io/items/SWIG_NumPy_examples.html
+import numpy
+numpy_include = numpy.get_include()
+
+
 class build(_build):
 	sub_commands = [
 		('build_ext', _build.has_ext_modules),
@@ -18,6 +23,7 @@ pyospray_module = Extension(
 	'_pyospray',
 	sources=['src/pyospray/pyospray.i'],
 	swig_opts=['-py3', '-I/usr/include/ospray'],
+	include_dirs=[numpy_include],
 	libraries=['ospray'],
 )
 

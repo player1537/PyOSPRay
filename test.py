@@ -4,6 +4,7 @@
 """
 
 from pyospray import *
+import numpy as np
 
 WIDTH = 1024
 HEIGHT = 512
@@ -20,30 +21,30 @@ def main():
 		camera.up = (0, 1, 0)
 	
 	with committing(TriangleMesh()) as mesh:
-		vertex = [
+		vertex = np.array([
 			-1.0, -1.0, 3.0, 0.0,
 			-1.0, 1.0, 3.0, 0.0,
 			1.0, -1.0, 3.0, 0.0,
 			0.1, 0.1, 0.3, 0.0,
-		]
+		], dtype='float32')
 		with releasing(Data(OSP_FLOAT3A, vertex, 0)) as data:
 			data.commit()
 			mesh.vertex = data
 		
-		color = [
+		color = np.array([
 			0.9, 0.5, 0.5, 1.0,
 			0.8, 0.8, 0.8, 1.0,
 			0.8, 0.8, 0.8, 1.0,
 			0.5, 0.9, 0.5, 1.0,
-		]
+		], dtype='float32')
 		with releasing(Data(OSP_FLOAT4, color, 0)) as data:
 			data.commit()
 			mesh.vertex__color = data
 		
-		index = [
+		index = np.array([
 			0, 1, 2,
 			1, 2, 3,
-		]
+		], dtype='int32')
 		with releasing(Data(OSP_INT3, index, 0)) as data:
 			data.commit()
 			mesh.index = data
@@ -61,7 +62,11 @@ def main():
 		with committing(AmbientLight(renderer)) as light:
 			pass
 		
-		with releasing(Data(OSP_LIGHT, [light], 0)) as lights:
+		lights = np.array([
+			light,
+		], dtype=object)
+		print(repr(lights))
+		with releasing(Data(OSP_LIGHT, lights, 0)) as lights:
 			lights.commit()
 			renderer.lights = lights
 	
@@ -72,8 +77,7 @@ def main():
 	with releasing(FrameBuffer(size, OSP_FB_SRGBA, OSP_FB_COLOR)) as fb:
 		fb.clear(OSP_FB_COLOR)
 		renderer.render(fb, OSP_FB_COLOR)
-		buffer = ospByteBuffer(WIDTH * HEIGHT * 3)
-		ospToPixels(b"rgb", size, fb._ospray_object, buffer)
+		buffer = ospToPixels(b"rgb", size, fb._ospray_object)
 		print(f'[0] = {buffer[0]}')
 		print(f'[1] = {buffer[1]}')
 		print(f'[2] = {buffer[2]}')

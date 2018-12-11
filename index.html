@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<title>PyOSPRay Tapestry Test</title>
+<img id="img"></img>
+<script>
+/** Thanks https://stackoverflow.com/a/15048260 */
+/*
+Returns a random point of a sphere, evenly distributed over the sphere.
+The sphere is centered at (x0,y0,z0) with the passed in radius.
+The returned point is returned as a three element array [x,y,z]. 
+*/
+function randomSpherePoint(u0,v0,x0,y0,z0,radius){
+	var u = Math.random();
+	var v = Math.random();
+	var theta = 2 * Math.PI * u;
+	var phi = Math.acos(2 * v - 1);
+	var x = x0 + (radius * Math.sin(phi) * Math.cos(theta));
+	var y = y0 + (radius * Math.sin(phi) * Math.sin(theta));
+	var z = z0 + (radius * Math.cos(phi));
+	return [x,y,z];
+}
+
+const img = document.getElementById('img');
+
+function *points(radius) {
+	let theta = 2 * Math.PI * Math.random();
+	for (;;) {
+		theta += 0.01 * Math.PI; // * (1 * Math.PI * Math.random());
+		//phi += 0.01 * (Math.acos(2 * Math.random() - 1));
+		
+		const x = radius * Math.cos(theta);
+		const y = radius * Math.sin(theta);
+		const z = 0; 
+		
+		yield { x, y, z };
+	}
+}
+
+const generator = points(5);
+const step = () => {
+	const { done, value } = generator.next();
+	const { x, y, z } = value;
+	
+	img.src = `/${x}/${y}/${z}/0/1/0/${-x}/${-y}/${-z}`;
+	
+	console.log(x, y, z);
+};
+img.onload = step;
+step();
+
+</script>
