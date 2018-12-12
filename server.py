@@ -10,10 +10,15 @@ from pathlib import Path
 from pyospray import *
 from mss.tools import to_png
 import numpy as np
+from functools import partial
+import logging
+
+
+print = partial(print, flush=True)
 
 
 _g_scene = None
-WIDTH, HEIGHT = (512, 512)
+WIDTH, HEIGHT = (256, 256)
 
 
 class TapestryRequestHandler(BaseHTTPRequestHandler):
@@ -42,11 +47,10 @@ class TapestryRequestHandler(BaseHTTPRequestHandler):
 		
 		_g_scene.renderer.commit()
 		
-		with releasing(FrameBuffer(_g_scene.size, OSP_FB_SRGBA, OSP_FB_COLOR)) as fb:
-			fb.clear(OSP_FB_COLOR)
-			_g_scene.renderer.render(fb, OSP_FB_COLOR)
-			data = ospToPixels(b"rgb", _g_scene.size, fb._ospray_object)
-			png = to_png(data, (WIDTH, HEIGHT))
+		_g_scene.fb.clear(OSP_FB_COLOR)
+		_g_scene.renderer.render(_g_scene.fb, OSP_FB_COLOR)
+		data = ospToPixels(b"rgb", _g_scene.size, _g_scene.fb._ospray_object)
+		png = to_png(data, (WIDTH, HEIGHT))
 		
 		self.send_response(200)
 		self.send_header('Content-Type', 'image/png')
@@ -60,12 +64,43 @@ class Scene:
 	renderer: Renderer
 	light: Light
 	size: osp_vec2i
+	fb: FrameBuffer
 	
 
 def make_scene():
 	error = ospInit([]);
 	if error != OSP_NO_ERROR:
 		raise Exception('Error occurred', err)
+		
+	with committing(PiecewiseLinear()) as transferFunction:
+		colors = np.array([
+			0.2, 0.0, 0.0,
+			0.8, 0.0, 0.0,
+		], dtype='float32')
+		with releasing(Data(OSP_FLOAT3, colors, 0)) as data:
+			data.commit()
+			transferFunction.colors = data
+		
+		opacities = np.array([
+			0.1, 0.9,
+		], dtype='float32')
+		with releasing(Data(OSP_FLOAT, opacities, 0)) as data:
+			data.commit()
+			transferFunction.opacities = data
+		
+		transferFunction.valueRange = (0.0, 255.0)
+	
+	with committing(StructuredVolume()) as volume:
+		voxels = np.fromfile('teapot.raw', dtype='float32').T
+		print(voxels.min(), voxels.max(), len(voxels.flat))
+		with releasing(Data(OSP_FLOAT, voxels, 0)) as data:
+			data.commit()
+			volume.voxelData = data
+
+		volume.transferFunction = transferFunction
+		volume.voxelRange = (0.0, 255.0)
+		volume.dimensions = (256, 256, 178)
+		volume.voxelType = b'float'
 	
 	with committing(OrthographicCamera()) as camera:
 		camera.height = HEIGHT
@@ -73,70 +108,46 @@ def make_scene():
 		camera.pos = (0, 0, 0)
 		camera.dir = (0.1, 0, 0.1)
 		camera.up = (0, 1, 0)
-	
-	with committing(TriangleMesh()) as geometry:
-		vertex = np.array([
-			-1.0, -1.0, 3.0, 0.0,
-			-1.0, 1.0, 3.0, 0.0,
-			1.0, -1.0, 3.0, 0.0,
-			0.1, 0.1, 0.3, 0.0,
-		], dtype='float32')
-		with releasing(Data(OSP_FLOAT3A, vertex, 0)) as data:
-			data.commit()
-			geometry.vertex = data
-		
-		color = np.array([
-			0.9, 0.5, 0.5, 1.0,
-			0.8, 0.8, 0.8, 1.0,
-			0.8, 0.8, 0.8, 1.0,
-			0.5, 0.9, 0.5, 1.0,
-		], dtype='float32')
-		with releasing(Data(OSP_FLOAT4, color, 0)) as data:
-			data.commit()
-			geometry.vertex__color = data
-		
-		index = np.array([
-			0, 1, 2,
-			1, 2, 3,
-		], dtype='int32')
-		with releasing(Data(OSP_INT3, index, 0)) as data:
-			data.commit()
-			geometry.index = data
-	
+
 	with committing(Model()) as model:
-		with releasing(geometry):
-			model.add(geometry)
+		model.add(volume)
 
 	with committing(SciVis()) as renderer:
-		renderer.spp = 4
-		renderer.bgColor = 0.5
-		renderer.model = model
-		renderer.camera = camera
-		renderer.oneSidedLighting = False
-		
 		with committing(AmbientLight(renderer)) as light:
 			pass
 		
 		lights = np.array([
 			light,
 		], dtype=object)
-		with releasing(Data(OSP_LIGHT, lights, 0)) as lights:
-			lights.commit()
-			renderer.lights = lights
+		with releasing(Data(OSP_LIGHT, lights, 0)) as data:
+			data.commit()
+			renderer.lights = data
+		
+		renderer.spp = 4
+		renderer.bgColor = 0.5
+		renderer.model = model
+		renderer.camera = camera
+		#renderer.oneSidedLighting = False
 	
 	size = osp_vec2i()
 	size.x = WIDTH
 	size.y = HEIGHT
+		
+	fb = FrameBuffer(size, OSP_FB_RGBA8, OSP_FB_COLOR)
 	
 	return Scene(
 		camera,
 		renderer,
 		light,
 		size,
+		fb,
 	)
 
 
-def main(port):
+def main(port, verbose):
+	if verbose:
+		logging.basicConfig(level=logging.DEBUG)
+	
 	scene = make_scene()
 	
 	global _g_scene
@@ -153,6 +164,7 @@ def cli():
 	parser = argparse.ArgumentParser()
 	
 	parser.add_argument('--port', type=int, default=8819)
+	parser.add_argument('-v', '--verbose', action='store_true')
 	
 	args = vars(parser.parse_args())
 	

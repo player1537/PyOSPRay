@@ -79,7 +79,9 @@ import_array();
 	if ($2 == OSP_FLOAT3A) { spec.type = NPY_FLOAT32; spec.div = 4; }
 	else if ($2 == OSP_FLOAT4) { spec.type = NPY_FLOAT32; spec.div = 4; }
 	else if ($2 == OSP_INT3) { spec.type = NPY_INT32; spec.div = 3; }
+	else if ($2 == OSP_FLOAT3) { spec.type = NPY_FLOAT32; spec.div = 3; }
 	else if ($2 == OSP_LIGHT) { spec.type = NPY_OBJECT; spec.div = 1; }
+	else if ($2 == OSP_FLOAT) { spec.type = NPY_FLOAT32; spec.div = 1; }
 	else {
 		printf("%d\n", $2);
 		PyErr_SetString(PyExc_TypeError, "unimplemented OSPDataType");
@@ -104,13 +106,15 @@ import_array();
 	}
 	
 	$3 = array_data(pySource);
-	
+	len = array_size(pyArray, 0);
+	$1 = len / spec.div;
+
 	if ($2 == OSP_LIGHT) {
-		len = array_size(pyArray, 0);
 		PyObject **po, *obj, *ospObj;
-		SwigPyObject **so;
+		SwigPyObject *sobj;
+		OSPLight **lights;
 		po = $3;
-		so = malloc(len * sizeof(void *));
+		lights = malloc(len * sizeof(OSPLight *));
 		for (i=0; i<len; ++i) {
 			obj = *po++;
 			ospObj = PyObject_GetAttrString(obj, "_ospray_object");
@@ -118,9 +122,14 @@ import_array();
 				PyErr_SetString(PyExc_TypeError, "Object has no _ospray_object");
 				SWIG_fail;
 			}
-			*so++ = SWIG_Python_GetSwigThis(ospObj);
+			if (!SwigPyObject_Check(ospObj)) {
+				PyErr_SetString(PyExc_TypeError, "list must contain swig objects");
+				SWIG_fail;
+			}
+			sobj = SWIG_Python_GetSwigThis(ospObj);
+			*((OSPLight **)lights + i) = sobj->ptr;
 		}
-		$3 = so;
+		$3 = lights;
 	}
 }
 

@@ -1,28 +1,5 @@
-CFLAGS = -std=c99
-LDFLAGS = -Wl,-rpath /usr/local/lib -lospray
-
-.PHONY: all
-all:
-
-.PHONY: run
-run: .mk.depend
-	./venv/bin/python test.py
-
-.PHONY: depend
-depend: .mk.depend
-
-.mk.depend: setup.py
-	python3.6 -m virtualenv venv
-	./venv/bin/pip install -e .
-	touch $@
-
-ospray.py: .mk.swig
-	touch $@
-
-ospray_wrap.c: .mk.swig
-	touch $@
-
-.mk.swig: ospray.i
-	swig -python -I/usr/local/include/ospray ospray.i
-	touch $@
-
+OSPRAY_VERSION = 1.7.3
+OSPRAY = $(abspath ospray-$(OSPRAY_VERSION).x86_64.linux)
+CFLAGS = -I$(OSPRAY)/include
+LDFLAGS = -L$(OSPRAY)/lib
+LDLIBS = -lospray

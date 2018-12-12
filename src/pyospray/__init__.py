@@ -4,6 +4,16 @@
 
 from contextlib import contextmanager
 from .pyospray import *
+import logging
+
+
+_logger = None
+
+def get_logger():
+	global _logger
+	if _logger is None:
+		_logger = logging.getLogger(__name__)
+	return _logger
 
 
 @contextmanager
@@ -44,19 +54,32 @@ class ManagedObjectMeta(type):
 class ManagedObject(metaclass=ManagedObjectMeta):
 	@lazy_property
 	def _ospray_object(self):
-		return self.get_ospray_object()
+		self._logger.debug('new %s', self.__class__.__name__)
+		obj = self.get_ospray_object()
+		assert obj is not None
+		return obj
+	
+	@lazy_property
+	def _logger(self):
+		return get_logger()
 
 	def commit(self):
+		self._logger.debug('ospCommit(%s)', self.__class__.__name__)
 		ospCommit(self._ospray_object)
 	
 	def get_ospray_object(self, *args, **kwargs):
 		return self.ospray_class(*args, **kwargs)
 	
 	def release(self):
+		self._logger.debug('ospRelease(%s)', self.__class__.__name__)
 		ospRelease(self._ospray_object)
 
 
 class Committer(object):
+	@lazy_property
+	def _logger(self):
+		return get_logger()
+		
 	def __init__(self, type):
 		self.setter = Committer.get_ospray_setter(type)
 		self.name = None
@@ -70,6 +93,7 @@ class Committer(object):
 			args = value
 		else:
 			args = (value,)
+		self._logger.debug('set %s.%s = %r using %s', obj.__class__.__name__, self.name, args, self.setter.__name__)
 		self.setter(ospray_object, self.name, *args)
 	
 	def __set_name__(self, owner, name):
@@ -99,6 +123,8 @@ class Committer(object):
 			return setObject
 		elif type == 'OSPVolume':
 			return setObject
+		elif type == 'OSPTransferFunction':
+			return setObject
 		elif type == 'bool':
 			return ospSet1i
 		elif type == 'float':
@@ -116,7 +142,7 @@ class Committer(object):
 		elif type == 'int32[]':
 			return setData
 		elif type == 'string':
-			return None
+			return ospSetString
 		elif type == 'vec2f':
 			return ospSet2f
 		elif type == 'vec2f[]':
@@ -132,7 +158,7 @@ class Committer(object):
 		elif type == 'vec3fa[] / vec4f[]':
 			return setData
 		elif type == 'vec3i':
-			return None
+			return ospSet3i
 		elif type == 'vec3i(a)[]':
 			return setData
 		elif type == 'vec4f[]':
@@ -143,15 +169,17 @@ class Committer(object):
 			return setData
 		elif type == 'vec4i[]':
 			return setData
-
+		else:
+			raise NotImplementedError
 
 
 class Volume(ManagedObject):
 	variant = None
-	
+
 	def get_ospray_object(self):
 		return ospNewVolume(self.variant)
-	
+
+	transferFunction = Committer('OSPTransferFunction')
 	voxelRange = Committer('vec2f')
 	gradientShadingEnabled = Committer('bool')
 	preIntegration = Committer('bool')
@@ -166,7 +194,7 @@ class Volume(ManagedObject):
 
 
 class StructuredVolume(Volume):
-	variant = b'shared_structure_volume'
+	variant = b'shared_structured_volume'
 	
 	dimensions = Committer('vec3i')
 	voxelType = Committer('string')

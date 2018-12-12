@@ -1,0 +1,2 @@
+include src/pyospray/pyospray.i
+include src/pyospray/pyospray_wrap.c

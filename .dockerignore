@@ -4,3 +4,4 @@
 !ospray*.tar.gz
 !setup.py
 !src/
+!MANIFEST.in
