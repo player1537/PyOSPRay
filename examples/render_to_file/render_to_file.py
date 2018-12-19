@@ -5,6 +5,7 @@
 
 from pyospray import *
 import numpy as np
+from PIL import Image
 
 WIDTH = 1024
 HEIGHT = 512
@@ -65,7 +66,6 @@ def main():
 		lights = np.array([
 			light,
 		], dtype=object)
-		print(repr(lights))
 		with releasing(Data(OSP_LIGHT, lights, 0)) as lights:
 			lights.commit()
 			renderer.lights = lights
@@ -78,9 +78,8 @@ def main():
 		fb.clear(OSP_FB_COLOR)
 		renderer.render(fb, OSP_FB_COLOR)
 		buffer = ospToPixels(b"rgb", size, fb._ospray_object)
-		print(f'[0] = {buffer[0]}')
-		print(f'[1] = {buffer[1]}')
-		print(f'[2] = {buffer[2]}')
+		image = Image.frombytes('RGB', (WIDTH, HEIGHT), buffer, 'raw')
+		image.save('out.png')
 
 	print('all good')
 
