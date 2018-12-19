@@ -72,34 +72,6 @@ class TapestryRequestHandler(BaseHTTPRequestHandler):
 		scene.fb.clear(OSP_FB_COLOR)
 		scene.renderer.render(scene.fb, OSP_FB_COLOR)
 		data = ospToPixels(b"rgb", scene.size, scene.fb._ospray_object)
-		'''
-		source = np.frombuffer(data, dtype='B')
-		data = source.copy()
-		print(source[:8], source.shape)
-		for j in range(HEIGHT):
-			row = source[4*j*WIDTH:]
-			for i in range(WIDTH):
-				index = j * WIDTH + i
-				r = row[4*i+0]
-				g = row[4*i+1]
-				b = row[4*i+2]
-				a = row[4*i+3]
-				w = a / 255
-				if i < 4 and j < 4:
-					print((r, g, b, a, w))
-				composite = BG[3] != 0
-				data[4*index+0] = r * w + (BG[0] * (1 - w) if composite else 0)
-				data[4*index+1] = g * w + (BG[1] * (1 - w) if composite else 0)
-				data[4*index+2] = b * w + (BG[2] * (1 - w) if composite else 0)
-				data[4*index+3] = a * w + (BG[3] * (1 - w) if composite else 0)
-		print(data[:8], data.shape)
-		data = data.reshape((-1, 4))
-		print(data[:4], data.shape)
-		data = data[:, :-1]
-		print(data[:4], data.shape)
-		data = data.reshape((-1,))
-		data = data.tobytes()
-		'''
 		return data
 	
 	def do_GET_image(self):
@@ -116,8 +88,6 @@ class TapestryRequestHandler(BaseHTTPRequestHandler):
 			image = Image.frombytes('RGB', (WIDTH, HEIGHT), data, 'raw')
 			f = BytesIO()
 			image.save(f, 'JPEG')
-			
-			#png = to_png(data, (WIDTH, HEIGHT))
 			
 			self.send_response(200)
 			self.send_header('Content-Type', 'image/jpeg')
@@ -176,16 +146,6 @@ def make_scene():
 		model.add(volume)
 
 	with committing(SciVis()) as renderer:
-		#with committing(DirectionalLight(renderer)) as light:
-		#	light.angularDiameter = 0.53
-		#
-		#lights = np.array([
-		#	light,
-		#], dtype=object)
-		#with releasing(Data(OSP_LIGHT, lights, 0)) as data:
-		#	data.commit()
-		#	renderer.lights = data
-		
 		renderer.spp = 4
 		renderer.bgColor = (BG[0]/255, BG[1]/255, BG[2]/255, BG[3]/255)
 		renderer.model = model
