@@ -22,4 +22,5 @@ CMD []
 FROM builder AS user
 
 RUN python3.7 -m pip install \
-	mss
+	mss \
+	Pillow

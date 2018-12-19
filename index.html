@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <title>PyOSPRay Tapestry Test</title>
-<img id="img"></img>
+<img></img>
 <script>
 /** Thanks https://stackoverflow.com/a/15048260 */
 /*
@@ -19,8 +19,6 @@ function randomSpherePoint(u0,v0,x0,y0,z0,radius){
 	return [x,y,z];
 }
 
-const img = document.getElementById('img');
-
 function *points(radius) {
 	let theta = 2 * Math.PI * Math.random();
 	for (;;) {
@@ -35,16 +33,28 @@ function *points(radius) {
 	}
 }
 
-const generator = points(5);
-const step = () => {
-	const { done, value } = generator.next();
-	const { x, y, z } = value;
+function doit(img) {
 	
-	img.src = `/${x}/${y}/${z}/0/1/0/${-x}/${-y}/${-z}`;
-	
-	console.log(x, y, z);
+	const generator = points(5);
+	let begin = performance.now();
+	const step = () => {
+		const { done, value } = generator.next();
+		const { x, y, z } = value;
+		
+		img.src = `/${x}/${y}/${z}/0/1/0/${-x}/${-y}/${-z}`;
+		
+		const now = performance.now();
+		
+		console.log((1000 / (now - begin)).toFixed(2));
+		
+		begin = now;
+	};
+	img.onload = step;
+	step();
 };
-img.onload = step;
-step();
+
+const images = Array.from(document.querySelectorAll('img'));
+
+images.forEach(doit);
 
 </script>

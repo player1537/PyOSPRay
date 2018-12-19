@@ -22,7 +22,7 @@ class build(_build):
 pyospray_module = Extension(
 	'_pyospray',
 	sources=['src/pyospray/pyospray.i'],
-	swig_opts=['-py3', '-I/usr/include/ospray'],
+	swig_opts=['-py3', '-threads', '-I/usr/include/ospray'],
 	include_dirs=[numpy_include],
 	libraries=['ospray'],
 )
@@ -33,6 +33,7 @@ setup(
 	name='pyospray',
 	packages=['pyospray'],
 	package_dir={'pyospray': 'src/pyospray'},
+	package_data={'pyospray': ['data/*.txt']},
 	version='0.1.0',
 	description="Python wrapper around the OSPRay renderer with both the native and a Pythonic API",
 	author='Tanner Hobson',

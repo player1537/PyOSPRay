@@ -1,6 +1,11 @@
 #!/usr/bin/env sh
 
 tag=pyospray:latest
+ospray_version=1.7.3
+
+download() {
+	wget https://github.com/ospray/OSPRay/releases/download/v1.7.3/ospray-1.7.3.x86_64.linux.tar.gz
+}
 
 build() {
 	docker build -t $tag .
@@ -19,7 +24,7 @@ inspect() {
 	docker run -it --rm --entrypoint bash $tag "$@"
 }
 
-: ${0##*/}
+_=${0##*/}
 if [ "$_" = "pyospray" ]; then
 	python "$@"
 else

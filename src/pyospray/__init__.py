@@ -4,6 +4,7 @@
 
 from contextlib import contextmanager
 from .pyospray import *
+from .builtin import *
 import logging
 
 
@@ -605,3 +606,16 @@ class Data(ManagedObject):
 	
 	def get_ospray_object(self):
 		return ospNewData((self._type, self._data), self._flags)
+
+
+class _Builtin:
+	@lazy_property
+	def colormaps(self):
+		return load_colormaps()
+	
+	@lazy_property
+	def opacitymaps(self):
+		return load_opacitymaps()
+
+
+builtin = _Builtin()
