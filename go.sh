@@ -19,7 +19,7 @@ docs() (
 	cd ..
 	rm -rf docs
 	cp -r _docs/_build/html docs
-	cp -r _docs/_static docs/_static
+	cp -r _docs/_config.yml docs/
 )
 
 run() {
