@@ -11,7 +11,6 @@ from random import random
 from math import pi, cos, sin, acos
 from pathlib import Path
 from pyospray import *
-from mss.tools import to_png
 import numpy as np
 from functools import partial
 import logging

@@ -234,6 +234,7 @@ import_array();
 
 %include "ospray.h"
 %include "OSPDataType.h"
+%include "OSPTexture.h"
 
 
 %{

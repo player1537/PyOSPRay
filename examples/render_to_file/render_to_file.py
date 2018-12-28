@@ -60,7 +60,7 @@ def main():
 		renderer.model = world
 		renderer.camera = camera
 		
-		with committing(AmbientLight(renderer)) as light:
+		with committing(AmbientLight()) as light:
 			pass
 		
 		lights = np.array([
