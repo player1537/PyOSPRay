@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 
 tag=pyospray:latest
+docs=pyospray-docs:latest
 ospray_version=1.7.3
 
 download() {
@@ -10,6 +11,15 @@ download() {
 build() {
 	docker build -t $tag .
 }
+
+docs() (
+	docker build -t $docs --target docs .
+	cd _docs
+	tag=$docs run make html
+	cd ..
+	rm -rf docs
+	cp -r _docs/_build/html docs
+)
 
 run() {
 	docker run -i --network host -a stdin -a stdout -a stderr --sig-proxy=true --rm -u $(id -u):$(id -g) -v $PWD:$PWD -w $PWD $tag "$@"

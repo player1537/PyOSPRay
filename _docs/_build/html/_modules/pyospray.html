@@ -1,0 +1,1289 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pyospray &#8212; pyospray 20181228 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for pyospray</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Python wrapper around the OSPRay rendering library</span>
+
+<span class="sd">The main utility of this project is around creating and using the</span>
+<span class="sd">objects that OSPRay works with. This includes setting up Renderers,</span>
+<span class="sd">Models, Geometries, and Materials.</span>
+
+<span class="sd">Instead of the functional structure that OSPRay uses, this project uses</span>
+<span class="sd">a more Pythonic object-oriented interface. In essence, this means using</span>
+<span class="sd">`obj.attr = value` instead of `set(obj, &#39;attr&#39;, value)`.</span>
+
+<span class="sd">For more information on OSPRay and its capabilities, go to `its</span>
+<span class="sd">website`__.</span>
+
+<span class="sd">__ https://www.ospray.org/documentation.html</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="k">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span> <span class="nn">.pyospray</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.builtin</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">def</span> <span class="nf">get_logger</span><span class="p">():</span>
+	<span class="k">global</span> <span class="n">_logger</span>
+	<span class="k">if</span> <span class="n">_logger</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">_logger</span>
+
+
+<div class="viewcode-block" id="committing"><a class="viewcode-back" href="../index.html#pyospray.committing">[docs]</a><span class="nd">@contextmanager</span>
+<span class="k">def</span> <span class="nf">committing</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Commit the object after the context manager block.&quot;&quot;&quot;</span>
+	<span class="k">yield</span> <span class="n">obj</span>
+	<span class="n">obj</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="releasing"><a class="viewcode-back" href="../index.html#pyospray.releasing">[docs]</a><span class="nd">@contextmanager</span>
+<span class="k">def</span> <span class="nf">releasing</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Release the object after the context manager block.&quot;&quot;&quot;</span>
+	<span class="k">yield</span> <span class="n">obj</span>
+	<span class="n">obj</span><span class="o">.</span><span class="n">release</span><span class="p">()</span></div>
+
+
+<span class="c1"># Thanks https://stackoverflow.com/a/6849299</span>
+<div class="viewcode-block" id="lazy_property"><a class="viewcode-back" href="../index.html#pyospray.lazy_property">[docs]</a><span class="k">class</span> <span class="nc">lazy_property</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	meant to be used for lazy evaluation of an object attribute.</span>
+<span class="sd">	property should represent non-mutable data, as it replaces itself.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fget</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fget</span> <span class="o">=</span> <span class="n">fget</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">func_name</span> <span class="o">=</span> <span class="n">fget</span><span class="o">.</span><span class="vm">__name__</span>
+
+	<span class="k">def</span> <span class="nf">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="bp">cls</span><span class="p">):</span>
+		<span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">return</span> <span class="kc">None</span>
+		<span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fget</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+		<span class="nb">setattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">func_name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="ManagedObjectMeta"><a class="viewcode-back" href="../index.html#pyospray.ManagedObjectMeta">[docs]</a><span class="k">class</span> <span class="nc">ManagedObjectMeta</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Metaclass reserved for future use.&quot;&quot;&quot;</span>
+	<span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="ManagedObject"><a class="viewcode-back" href="../index.html#pyospray.ManagedObject">[docs]</a><span class="k">class</span> <span class="nc">ManagedObject</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ManagedObjectMeta</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Base class for all OSPRay objects</span>
+<span class="sd">	</span>
+<span class="sd">	Subclasses should override or extend the</span>
+<span class="sd">	:meth:`~.ManagedObject._make_ospray_object` method and return</span>
+<span class="sd">	an appropriate OSPRay object (e.g. `ospNewGeometry(...)`).</span>
+
+<span class="sd">	Any attributes that can be set (e.g. with `ospSet3f(...)` or</span>
+<span class="sd">	similar methods) can use the :class:`~.Committer` descriptor</span>
+<span class="sd">	in their class definition to automatically have getters/setters</span>
+<span class="sd">	with the appropriate types.</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="nd">@lazy_property</span>
+	<span class="k">def</span> <span class="nf">_logger</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Return the appropriate logger.&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">get_logger</span><span class="p">()</span>
+	
+	<span class="nd">@lazy_property</span>
+	<span class="k">def</span> <span class="nf">_ospray_object</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Return the OSPRay object instance.&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;new </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+		<span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_ospray_object</span><span class="p">()</span>
+		<span class="k">assert</span> <span class="n">obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+		<span class="k">return</span> <span class="n">obj</span>
+	
+	<span class="k">def</span> <span class="nf">_make_ospray_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Make the low-level OSPRay object and return it.&quot;&quot;&quot;</span>
+		<span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+<div class="viewcode-block" id="ManagedObject.commit"><a class="viewcode-back" href="../index.html#pyospray.ManagedObject.commit">[docs]</a>	<span class="k">def</span> <span class="nf">commit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Commit any changes to OSPRay.&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;ospCommit(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+		<span class="n">ospCommit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ospray_object</span><span class="p">)</span></div>
+	
+	<span class="k">def</span> <span class="nf">release</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;ospRelease(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+		<span class="n">ospRelease</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ospray_object</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Committer"><a class="viewcode-back" href="../index.html#pyospray.Committer">[docs]</a><span class="k">class</span> <span class="nc">Committer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Automatical type-correct setters for managed objects.</span>
+<span class="sd">	</span>
+<span class="sd">	Intended to be used like this::</span>
+<span class="sd">	</span>
+<span class="sd">	  class Foo(ManagedObject):</span>
+<span class="sd">	      myattr = Committer(&#39;vec2f&#39;)</span>
+<span class="sd">	  </span>
+<span class="sd">	  foo = Foo()</span>
+<span class="sd">	  foo.myattr = (1.0, 2.0)</span>
+<span class="sd">	</span>
+<span class="sd">	Which will function like the low level OSPRay code::</span>
+<span class="sd">	</span>
+<span class="sd">	  foo = ospNewFoo()</span>
+<span class="sd">	  setVec2f(foo, &#39;myattr&#39;, 1.0, 2.0)</span>
+<span class="sd">	</span>
+<span class="sd">	Note: In the future, this may also set a dirty flag on the object</span>
+<span class="sd">	so that commits aren&#39;t missed.</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="nd">@lazy_property</span>
+	<span class="k">def</span> <span class="nf">_logger</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Return the module logger.&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">get_logger</span><span class="p">()</span>
+		
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Create the committer with the right type.</span>
+<span class="sd">		</span>
+<span class="sd">		`type` should be a string that matches one of the data</span>
+<span class="sd">		types in the :meth:`~.Committer.get_ospray_setter`</span>
+<span class="sd">		method, which should also match the types used in the</span>
+<span class="sd">		official documentation.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">setter</span> <span class="o">=</span> <span class="n">Committer</span><span class="o">.</span><span class="n">get_ospray_setter</span><span class="p">(</span><span class="nb">type</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="kc">None</span>
+
+	<span class="k">def</span> <span class="nf">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">objtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Return the attributes value.</span>
+<span class="sd">		</span>
+<span class="sd">		Note: Not currently implemented, but it may be in</span>
+<span class="sd">		the future.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+	
+	<span class="k">def</span> <span class="nf">__set__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Call the low-level OSPRay method to set the attribute.&quot;&quot;&quot;</span>
+		<span class="n">ospray_object</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">_ospray_object</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+			<span class="n">args</span> <span class="o">=</span> <span class="n">value</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">value</span><span class="p">,)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;set </span><span class="si">%s</span><span class="s1">.</span><span class="si">%s</span><span class="s1"> = </span><span class="si">%r</span><span class="s1"> using </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">setter</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">setter</span><span class="p">(</span><span class="n">ospray_object</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+	
+	<span class="k">def</span> <span class="nf">__set_name__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Remember the name of the attribute.</span>
+<span class="sd">		</span>
+<span class="sd">		This is part of the descriptor specification and saves</span>
+<span class="sd">		us from repeating the name of each attribute.</span>
+
+<span class="sd">		Note: The name is normalized according to</span>
+<span class="sd">		:meth:`~.Committer.normalize_name` to get Pythonic names</span>
+<span class="sd">		instead of the ones from OSPRay.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">Committer</span><span class="o">.</span><span class="n">normalize_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+	
+<div class="viewcode-block" id="Committer.normalize_name"><a class="viewcode-back" href="../index.html#pyospray.Committer.normalize_name">[docs]</a>	<span class="nd">@staticmethod</span>
+	<span class="k">def</span> <span class="nf">normalize_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Map Pythonic attribute names to OSPRay names.&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;__&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">)</span></div>
+	
+<div class="viewcode-block" id="Committer.get_ospray_setter"><a class="viewcode-back" href="../index.html#pyospray.Committer.get_ospray_setter">[docs]</a>	<span class="nd">@staticmethod</span>
+	<span class="k">def</span> <span class="nf">get_ospray_setter</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Return the appropriate low-level setter function.&quot;&quot;&quot;</span>
+		
+		<span class="c1"># Note: this function is written intentionally verbosely</span>
+		<span class="c1"># to make it easier to add special cases when needed</span>
+		<span class="c1"># (e.g. with float / vec3f / vec4f).</span>
+		
+		<span class="k">def</span> <span class="nf">setData</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+			<span class="n">ospSetData</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">_ospray_object</span><span class="p">)</span>
+		
+		<span class="k">def</span> <span class="nf">setObject</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+			<span class="n">ospSetObject</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">_ospray_object</span><span class="p">)</span>
+			
+		<span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;OSPCamera&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">setObject</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;OSPData&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">setData</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;OSPLight[]&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">setData</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;OSPModel&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">setObject</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;OSPTexture2D&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">setObject</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;OSPVolume&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">setObject</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;OSPTransferFunction&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">setObject</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;bool&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">ospSet1i</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;float&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">ospSet1f</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;float / vec3f / vec4f&#39;</span><span class="p">:</span>
+			<span class="k">def</span> <span class="nf">setter</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+				<span class="n">func_map</span> <span class="o">=</span> <span class="p">{</span> <span class="mi">1</span><span class="p">:</span> <span class="n">ospSet1f</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="n">ospSet3f</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="n">ospSet4f</span> <span class="p">}</span>
+				<span class="n">func</span> <span class="o">=</span> <span class="n">func_map</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)]</span>
+				<span class="n">func</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+			<span class="k">return</span> <span class="n">setter</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;float[]&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">setData</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;int&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">ospSet1i</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;int32[]&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">setData</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;string&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">ospSetString</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;vec2f&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">ospSet2f</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;vec2f[]&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">setData</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;vec3f&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">ospSet3f</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;vec3f(a)&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">ospSet3f</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;vec3f(a)[]&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">setData</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;vec3f[]&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">setData</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;vec3fa[] / vec4f[]&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">setData</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;vec3i&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">ospSet3i</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;vec3i(a)[]&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">setData</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;vec4f[]&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">setData</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;vec4f[] / vec3f(a)[]&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">setData</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;vec4f[] / vec3fa[]&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">setData</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;vec4i[]&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">setData</span>
+		<span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;int32[]&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">setData</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">NotImplementedError</span></div></div>
+
+
+<div class="viewcode-block" id="Volume"><a class="viewcode-back" href="../index.html#pyospray.Volume">[docs]</a><span class="k">class</span> <span class="nc">Volume</span><span class="p">(</span><span class="n">ManagedObject</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#volumes</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="kc">None</span>
+
+	<span class="k">def</span> <span class="nf">_make_ospray_object</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">ospNewVolume</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="p">)</span>
+
+	<span class="n">transferFunction</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;OSPTransferFunction&#39;</span><span class="p">)</span>
+	<span class="n">voxelRange</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec2f&#39;</span><span class="p">)</span>
+	<span class="n">gradientShadingEnabled</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+	<span class="n">preIntegration</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+	<span class="n">singleShade</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+	<span class="n">adaptiveSampling</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+	<span class="n">adaptiveScalar</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">adaptiveMaxSamplingRate</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">samplingRate</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">specular</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">volumeClippingBoxLower</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">volumeClippingBoxUpper</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="StructuredVolume"><a class="viewcode-back" href="../index.html#pyospray.StructuredVolume">[docs]</a><span class="k">class</span> <span class="nc">StructuredVolume</span><span class="p">(</span><span class="n">Volume</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#structured-volume</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;shared_structured_volume&#39;</span>
+	
+	<span class="n">dimensions</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3i&#39;</span><span class="p">)</span>
+	<span class="n">voxelType</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;string&#39;</span><span class="p">)</span>
+	<span class="n">gridOrigin</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">gridSpacing</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">voxelData</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;OSPData&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AMRVolume"><a class="viewcode-back" href="../index.html#pyospray.AMRVolume">[docs]</a><span class="k">class</span> <span class="nc">AMRVolume</span><span class="p">(</span><span class="n">Volume</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#adaptive-mesh-refinement-amr-volume</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;amr_volume&#39;</span>
+	
+	<span class="n">gridOrigin</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">gridSpacing</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">amrMethod</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;string&#39;</span><span class="p">)</span>
+	<span class="n">voxelType</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;string&#39;</span><span class="p">)</span>
+	<span class="n">brickInfo</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;OSPData&#39;</span><span class="p">)</span>
+	<span class="n">brickData</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;OSPData&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UnstructuredVolume"><a class="viewcode-back" href="../index.html#pyospray.UnstructuredVolume">[docs]</a><span class="k">class</span> <span class="nc">UnstructuredVolume</span><span class="p">(</span><span class="n">Volume</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#unstructured-volumes</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;unstructured_volume&#39;</span>
+	
+	<span class="n">vertices</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f[]&#39;</span><span class="p">)</span>
+	<span class="n">field</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float[]&#39;</span><span class="p">)</span>
+	<span class="n">intices</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec4i[]&#39;</span><span class="p">)</span>
+	<span class="n">hexMethod</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;string&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TransferFunction"><a class="viewcode-back" href="../index.html#pyospray.TransferFunction">[docs]</a><span class="k">class</span> <span class="nc">TransferFunction</span><span class="p">(</span><span class="n">ManagedObject</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#transfer-function</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="kc">None</span>
+	
+	<span class="k">def</span> <span class="nf">_make_ospray_object</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">ospNewTransferFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PiecewiseLinear"><a class="viewcode-back" href="../index.html#pyospray.PiecewiseLinear">[docs]</a><span class="k">class</span> <span class="nc">PiecewiseLinear</span><span class="p">(</span><span class="n">TransferFunction</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#transfer-function</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;piecewise_linear&#39;</span>
+	
+	<span class="n">colors</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f[]&#39;</span><span class="p">)</span>
+	<span class="n">opacities</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float[]&#39;</span><span class="p">)</span>
+	<span class="n">valueRange</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec2f&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Geometry"><a class="viewcode-back" href="../index.html#pyospray.Geometry">[docs]</a><span class="k">class</span> <span class="nc">Geometry</span><span class="p">(</span><span class="n">ManagedObject</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#geometries</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="kc">None</span>
+	
+	<span class="k">def</span> <span class="nf">_make_ospray_object</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">ospNewGeometry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="p">)</span>
+	
+	<span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">material</span><span class="p">):</span>
+		<span class="n">ospSetMaterial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ospray_object</span><span class="p">,</span> <span class="n">material</span><span class="o">.</span><span class="n">_ospray_object</span><span class="p">)</span></div>
+	
+
+<div class="viewcode-block" id="TriangleMesh"><a class="viewcode-back" href="../index.html#pyospray.TriangleMesh">[docs]</a><span class="k">class</span> <span class="nc">TriangleMesh</span><span class="p">(</span><span class="n">Geometry</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#triangle-mesh</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;triangles&#39;</span>
+	
+	<span class="n">vertex</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f(a)[]&#39;</span><span class="p">)</span>
+	<span class="n">vertex__normal</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f(a)[]&#39;</span><span class="p">)</span>
+	<span class="n">vertex__color</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec4f[] / vec3fa[]&#39;</span><span class="p">)</span>
+	<span class="n">vertex__texcoord</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec2f[]&#39;</span><span class="p">)</span>
+	<span class="n">index</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3i(a)[]&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="QuadMesh"><a class="viewcode-back" href="../index.html#pyospray.QuadMesh">[docs]</a><span class="k">class</span> <span class="nc">QuadMesh</span><span class="p">(</span><span class="n">Geometry</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#quad-mesh</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;quads&#39;</span>
+	
+	<span class="n">vertex</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f(a)[]&#39;</span><span class="p">)</span>
+	<span class="n">vertex__normal</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f(a)[]&#39;</span><span class="p">)</span>
+	<span class="n">vertex__color</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec4f[] / vec3fa[]&#39;</span><span class="p">)</span>
+	<span class="n">vertex__texcoord</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec2f[]&#39;</span><span class="p">)</span>
+	<span class="n">index</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec4i[]&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Spheres"><a class="viewcode-back" href="../index.html#pyospray.Spheres">[docs]</a><span class="k">class</span> <span class="nc">Spheres</span><span class="p">(</span><span class="n">Geometry</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#spheres</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;spheres&#39;</span>
+	
+	<span class="n">radius</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">spheres</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;OSPData&#39;</span><span class="p">)</span>
+	<span class="n">bytes_per_sphere</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+	<span class="n">offset_center</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+	<span class="n">offset_radius</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+	<span class="n">color</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec4f[] / vec3f(a)[]&#39;</span><span class="p">)</span>
+	<span class="n">texcoord</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec2f[]&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Cylinders"><a class="viewcode-back" href="../index.html#pyospray.Cylinders">[docs]</a><span class="k">class</span> <span class="nc">Cylinders</span><span class="p">(</span><span class="n">Geometry</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#cylinders</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;cylinders&#39;</span>
+	
+	<span class="n">radius</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">cylinders</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;OSPData&#39;</span><span class="p">)</span>
+	<span class="n">bytes_per_cylinder</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+	<span class="n">offset_v0</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+	<span class="n">offset_v1</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+	<span class="n">offset_radius</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+	<span class="n">color</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec4f[] / vec3f(a)[]&#39;</span><span class="p">)</span>
+	<span class="n">texcoord</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;OSPData&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Streamlines"><a class="viewcode-back" href="../index.html#pyospray.Streamlines">[docs]</a><span class="k">class</span> <span class="nc">Streamlines</span><span class="p">(</span><span class="n">Geometry</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#streamlines</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;streamlines&#39;</span>
+	
+	<span class="n">radius</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">smooth</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+	<span class="n">vertex</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3fa[] / vec4f[]&#39;</span><span class="p">)</span>
+	<span class="n">vertex__color</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec4f[]&#39;</span><span class="p">)</span>
+	<span class="n">vertex__radius</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float[]&#39;</span><span class="p">)</span>
+	<span class="n">index</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;int32[]&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Curves"><a class="viewcode-back" href="../index.html#pyospray.Curves">[docs]</a><span class="k">class</span> <span class="nc">Curves</span><span class="p">(</span><span class="n">Geometry</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#curves</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;curves&#39;</span>
+	
+	<span class="n">curveType</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;string&#39;</span><span class="p">)</span>
+	<span class="n">curveBasis</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;string&#39;</span><span class="p">)</span>
+	<span class="n">vertex</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec4f[]&#39;</span><span class="p">)</span>
+	<span class="n">index</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;int32[]&#39;</span><span class="p">)</span>
+	<span class="n">vertex__normal</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f[]&#39;</span><span class="p">)</span>
+	<span class="n">vertex__tangent</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f[]&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Isosurfaces"><a class="viewcode-back" href="../index.html#pyospray.Isosurfaces">[docs]</a><span class="k">class</span> <span class="nc">Isosurfaces</span><span class="p">(</span><span class="n">Geometry</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#isosurfaces</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;isosurfaces&#39;</span>
+	
+	<span class="n">isovalues</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float[]&#39;</span><span class="p">)</span>
+	<span class="n">volume</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;OSPVolume&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Slice"><a class="viewcode-back" href="../index.html#pyospray.Slice">[docs]</a><span class="k">class</span> <span class="nc">Slice</span><span class="p">(</span><span class="n">Geometry</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#slices</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;slices&#39;</span>
+	
+	<span class="n">planes</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec4f[]&#39;</span><span class="p">)</span>
+	<span class="n">volume</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;OSPVolume&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Instance"><a class="viewcode-back" href="../index.html#pyospray.Instance">[docs]</a><span class="k">class</span> <span class="nc">Instance</span><span class="p">(</span><span class="n">Geometry</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#instances</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">transform</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">model</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_transform</span> <span class="o">=</span> <span class="n">transform</span>
+	
+	<span class="k">def</span> <span class="nf">_make_ospray_object</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">ospNewInstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Renderer"><a class="viewcode-back" href="../index.html#pyospray.Renderer">[docs]</a><span class="k">class</span> <span class="nc">Renderer</span><span class="p">(</span><span class="n">ManagedObject</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#renderer</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="kc">None</span>
+	
+	<span class="k">def</span> <span class="nf">_make_ospray_object</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">ospNewRenderer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="p">)</span>
+	
+	<span class="n">model</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;OSPModel&#39;</span><span class="p">)</span>
+	<span class="n">camera</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;OSPCamera&#39;</span><span class="p">)</span>
+	<span class="n">lights</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;OSPLight[]&#39;</span><span class="p">)</span>
+	<span class="n">epsilon</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">spp</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+	<span class="n">maxDepth</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+	<span class="n">minContribution</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">varianceThreshold</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	
+<div class="viewcode-block" id="Renderer.render"><a class="viewcode-back" href="../index.html#pyospray.Renderer.render">[docs]</a>	<span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">framebuffer</span><span class="p">,</span> <span class="n">channels</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Render to the given framebuffer and return variance.&quot;&quot;&quot;</span>
+		<span class="n">variance</span> <span class="o">=</span> <span class="n">ospRenderFrame</span><span class="p">(</span><span class="n">framebuffer</span><span class="o">.</span><span class="n">_ospray_object</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ospray_object</span><span class="p">,</span> <span class="n">channels</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">variance</span></div></div>
+	
+	<span class="c1"># TODO: Add ospPick support</span>
+
+
+<div class="viewcode-block" id="SciVis"><a class="viewcode-back" href="../index.html#pyospray.SciVis">[docs]</a><span class="k">class</span> <span class="nc">SciVis</span><span class="p">(</span><span class="n">Renderer</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#scivis-renderer</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;scivis&#39;</span>
+	
+	<span class="n">shadowsEnabled</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+	<span class="n">aoSamples</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+	<span class="n">aoDistance</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">aoTransparencyEnabled</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+	<span class="n">oneSidedLighting</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+	<span class="n">bgColor</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float / vec3f / vec4f&#39;</span><span class="p">)</span>
+	<span class="n">maxDepthTexture</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;OSPTexture2D&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PathTracer"><a class="viewcode-back" href="../index.html#pyospray.PathTracer">[docs]</a><span class="k">class</span> <span class="nc">PathTracer</span><span class="p">(</span><span class="n">Renderer</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#path-tracer</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;pathtracer&#39;</span>
+	
+	<span class="n">rouletteDepth</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+	<span class="n">maxContribution</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">backplate</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;OSPTexture2D&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Model"><a class="viewcode-back" href="../index.html#pyospray.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">ManagedObject</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#model</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="k">def</span> <span class="nf">_make_ospray_object</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">ospNewModel</span><span class="p">()</span>
+	
+<div class="viewcode-block" id="Model.add"><a class="viewcode-back" href="../index.html#pyospray.Model.add">[docs]</a>	<span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Add an object to the model.</span>
+<span class="sd">		</span>
+<span class="sd">		This is either a :class:`~.Geometry` or a</span>
+<span class="sd">		:class:`~.Volume`.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Geometry</span><span class="p">):</span>
+			<span class="n">ospAddGeometry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ospray_object</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">_ospray_object</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Volume</span><span class="p">):</span>
+			<span class="n">ospAddVolume</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ospray_object</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">_ospray_object</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Model.remove"><a class="viewcode-back" href="../index.html#pyospray.Model.remove">[docs]</a>	<span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Remove an object from the model.</span>
+<span class="sd">		</span>
+<span class="sd">		This is either a :class:`~.Geometry` or a</span>
+<span class="sd">		:class:`~.Volume`.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Geometry</span><span class="p">):</span>
+			<span class="n">ospRemoveGeometry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ospray_object</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">_ospray_object</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Volume</span><span class="p">):</span>
+			<span class="n">ospRemoveVolume</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ospray_object</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">_ospray_object</span><span class="p">)</span></div></div>
+	
+
+<div class="viewcode-block" id="Light"><a class="viewcode-back" href="../index.html#pyospray.Light">[docs]</a><span class="k">class</span> <span class="nc">Light</span><span class="p">(</span><span class="n">ManagedObject</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#lights</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="kc">None</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+		<span class="k">if</span> <span class="n">renderer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;renderer parameter no longer needed&quot;</span><span class="p">)</span>
+	<span class="k">def</span> <span class="nf">_make_ospray_object</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">ospNewLight3</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="p">)</span>
+	
+	<span class="n">color</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f(a)&#39;</span><span class="p">)</span>
+	<span class="n">intensity</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">isVisible</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DirectionalLight"><a class="viewcode-back" href="../index.html#pyospray.DirectionalLight">[docs]</a><span class="k">class</span> <span class="nc">DirectionalLight</span><span class="p">(</span><span class="n">Light</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#directional-light-distant-light</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;distant&#39;</span>
+	
+	<span class="n">direction</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f(a)&#39;</span><span class="p">)</span>
+	<span class="n">angularDiameter</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PointLight"><a class="viewcode-back" href="../index.html#pyospray.PointLight">[docs]</a><span class="k">class</span> <span class="nc">PointLight</span><span class="p">(</span><span class="n">Light</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#point-light-sphere-light</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;sphere&#39;</span>
+	
+	<span class="n">position</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f(a)&#39;</span><span class="p">)</span>
+	<span class="n">radius</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SpotLight"><a class="viewcode-back" href="../index.html#pyospray.SpotLight">[docs]</a><span class="k">class</span> <span class="nc">SpotLight</span><span class="p">(</span><span class="n">Light</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#spot-light</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;spot&#39;</span>
+	
+	<span class="n">position</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f(a)&#39;</span><span class="p">)</span>
+	<span class="n">direction</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f(a)&#39;</span><span class="p">)</span>
+	<span class="n">openingAngle</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">penumbraAngle</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">radius</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="QuadLight"><a class="viewcode-back" href="../index.html#pyospray.QuadLight">[docs]</a><span class="k">class</span> <span class="nc">QuadLight</span><span class="p">(</span><span class="n">Light</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#quad-light</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;quad&#39;</span>
+
+	<span class="n">position</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f(a)&#39;</span><span class="p">)</span>
+	<span class="n">edge1</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f(a)&#39;</span><span class="p">)</span>
+	<span class="n">edge2</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f(a)&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HDRILight"><a class="viewcode-back" href="../index.html#pyospray.HDRILight">[docs]</a><span class="k">class</span> <span class="nc">HDRILight</span><span class="p">(</span><span class="n">Light</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#hdri-light</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;hdri&#39;</span>
+	
+	<span class="n">up</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f(a)&#39;</span><span class="p">)</span>
+	<span class="nb">dir</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f(a)&#39;</span><span class="p">)</span>
+	<span class="nb">map</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;OSPTexture2D&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmbientLight"><a class="viewcode-back" href="../index.html#pyospray.AmbientLight">[docs]</a><span class="k">class</span> <span class="nc">AmbientLight</span><span class="p">(</span><span class="n">Light</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#ambient-light</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;ambient&#39;</span></div>
+
+
+<div class="viewcode-block" id="Material"><a class="viewcode-back" href="../index.html#pyospray.Material">[docs]</a><span class="k">class</span> <span class="nc">Material</span><span class="p">(</span><span class="n">ManagedObject</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#materials</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="kc">None</span>
+	
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">renderer</span><span class="p">):</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">renderer</span><span class="p">,</span> <span class="n">Renderer</span><span class="p">):</span>
+			<span class="n">renderer</span> <span class="o">=</span> <span class="n">renderer</span><span class="o">.</span><span class="n">variant</span>
+		
+		<span class="bp">self</span><span class="o">.</span><span class="n">_renderer</span> <span class="o">=</span> <span class="n">renderer</span>
+	
+	<span class="k">def</span> <span class="nf">_make_ospray_object</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">ospNewMaterial2</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_renderer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="p">)</span></div>
+	
+	<span class="c1"># TODO: Include texture transformations</span>
+
+
+<div class="viewcode-block" id="OBJMaterial"><a class="viewcode-back" href="../index.html#pyospray.OBJMaterial">[docs]</a><span class="k">class</span> <span class="nc">OBJMaterial</span><span class="p">(</span><span class="n">Material</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#obj-material</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;OBJMaterial&#39;</span>
+
+	<span class="n">Kd</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">Ks</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">Ns</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">d</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">Tf</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">map_Bump</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;OSPTexture2D&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PrincipledMaterial"><a class="viewcode-back" href="../index.html#pyospray.PrincipledMaterial">[docs]</a><span class="k">class</span> <span class="nc">PrincipledMaterial</span><span class="p">(</span><span class="n">Material</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#principled</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;Principled&#39;</span>
+	
+	<span class="n">baseColor</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">edgeColor</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">metallic</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">diffuse</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">specular</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">ior</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">transmission</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">transmissionColor</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">transmissionDepth</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">roughness</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">anisotropy</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">rotation</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">normal</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">baseNormal</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">thin</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+	<span class="n">thickness</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">backlight</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">coat</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">coatIor</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">coatColor</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">coatThickness</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">coatRoughness</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">coatNormal</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">sheen</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">sheenColor</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">sheenTint</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">sheenRoughness</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">opacity</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CarPaintMaterial"><a class="viewcode-back" href="../index.html#pyospray.CarPaintMaterial">[docs]</a><span class="k">class</span> <span class="nc">CarPaintMaterial</span><span class="p">(</span><span class="n">Material</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#carpaint</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;CarPaint&#39;</span>
+	
+	<span class="n">baseColor</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">roughness</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">normal</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">flakeDensity</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">flakeScale</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">flakeSpread</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">flakeJitter</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">flakeRoughness</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">coat</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">coatIor</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">coatColor</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">coatThickness</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">coatRoughness</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">coatNormal</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">flipflopColor</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">flipflopFalloff</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MetalMaterial"><a class="viewcode-back" href="../index.html#pyospray.MetalMaterial">[docs]</a><span class="k">class</span> <span class="nc">MetalMaterial</span><span class="p">(</span><span class="n">Material</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#metal</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;Metal&#39;</span>
+	
+	<span class="n">ior</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f[]&#39;</span><span class="p">)</span>
+	<span class="n">eta</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">k</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">roughness</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AlloyMaterial"><a class="viewcode-back" href="../index.html#pyospray.AlloyMaterial">[docs]</a><span class="k">class</span> <span class="nc">AlloyMaterial</span><span class="p">(</span><span class="n">Material</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#alloy</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;Alloy&#39;</span>
+	
+	<span class="n">color</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">edgeColor</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">roughness</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GlassMaterial"><a class="viewcode-back" href="../index.html#pyospray.GlassMaterial">[docs]</a><span class="k">class</span> <span class="nc">GlassMaterial</span><span class="p">(</span><span class="n">Material</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#glass</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;Glass&#39;</span>
+	
+	<span class="n">eta</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">attenuationColor</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">attenuationDistance</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ThinGlassMaterial"><a class="viewcode-back" href="../index.html#pyospray.ThinGlassMaterial">[docs]</a><span class="k">class</span> <span class="nc">ThinGlassMaterial</span><span class="p">(</span><span class="n">Material</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#thinglass</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;ThinGlass&#39;</span>
+	
+	<span class="n">eta</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">attenuationColor</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">attenuationDistance</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">thickness</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MetallicPaintMaterial"><a class="viewcode-back" href="../index.html#pyospray.MetallicPaintMaterial">[docs]</a><span class="k">class</span> <span class="nc">MetallicPaintMaterial</span><span class="p">(</span><span class="n">Material</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#metallicpaint</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;MetallicPaint&#39;</span>
+	
+	<span class="n">baseColor</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">flakeAmount</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">flakeColor</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f&#39;</span><span class="p">)</span>
+	<span class="n">flakeSpread</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">eta</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LuminousMaterial"><a class="viewcode-back" href="../index.html#pyospray.LuminousMaterial">[docs]</a><span class="k">class</span> <span class="nc">LuminousMaterial</span><span class="p">(</span><span class="n">Material</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#luminous</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;Luminous&#39;</span></div>
+
+
+<div class="viewcode-block" id="Texture"><a class="viewcode-back" href="../index.html#pyospray.Texture">[docs]</a><span class="k">class</span> <span class="nc">Texture</span><span class="p">(</span><span class="n">ManagedObject</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#texture</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="kc">None</span>
+	
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+		<span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="nb">format</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">flags</span><span class="p">)):</span>
+			<span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Texture should not be used directly. See Texture2D&#39;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">variant</span> <span class="o">=</span> <span class="n">Texture2D</span><span class="o">.</span><span class="n">variant</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="nb">format</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">flags</span> <span class="o">=</span> <span class="n">flags</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+		
+	<span class="k">def</span> <span class="nf">_make_ospray_object</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">ospNewTexture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="p">)</span></div>
+	
+<div class="viewcode-block" id="Texture2D"><a class="viewcode-back" href="../index.html#pyospray.Texture2D">[docs]</a><span class="k">class</span> <span class="nc">Texture2D</span><span class="p">(</span><span class="n">Texture</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#texture2d</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;texture2D&#39;</span>
+	
+	<span class="n">size</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec2f&#39;</span><span class="p">)</span>
+	<span class="nb">type</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+	<span class="n">flags</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+	<span class="n">data</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;OSPData&#39;</span><span class="p">)</span>
+	
+	<span class="n">RGBA8</span> <span class="o">=</span> <span class="n">OSP_TEXTURE_RGBA8</span>
+	<span class="n">SRGBA</span> <span class="o">=</span> <span class="n">OSP_TEXTURE_SRGBA</span>
+	<span class="n">RGBA32F</span> <span class="o">=</span> <span class="n">OSP_TEXTURE_RGBA32F</span>
+	<span class="n">RGB8</span> <span class="o">=</span> <span class="n">OSP_TEXTURE_RGB8</span>
+	<span class="n">SRGB</span> <span class="o">=</span> <span class="n">OSP_TEXTURE_SRGB</span>
+	<span class="n">RGB32F</span> <span class="o">=</span> <span class="n">OSP_TEXTURE_RGB32F</span>
+	<span class="n">R8</span> <span class="o">=</span> <span class="n">OSP_TEXTURE_R8</span>
+	<span class="n">R32F</span> <span class="o">=</span> <span class="n">OSP_TEXTURE_R32F</span>
+	
+	<span class="n">NONE</span> <span class="o">=</span> <span class="mi">0</span>
+	<span class="n">NEAREST</span> <span class="o">=</span> <span class="n">OSP_TEXTURE_FILTER_NEAREST</span></div>
+
+
+<div class="viewcode-block" id="TextureVolume"><a class="viewcode-back" href="../index.html#pyospray.TextureVolume">[docs]</a><span class="k">class</span> <span class="nc">TextureVolume</span><span class="p">(</span><span class="n">Texture</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#texturevolume</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;volume&#39;</span>
+	
+	<span class="n">volume</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;OSPVolume&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Camera"><a class="viewcode-back" href="../index.html#pyospray.Camera">[docs]</a><span class="k">class</span> <span class="nc">Camera</span><span class="p">(</span><span class="n">ManagedObject</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#cameras</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="kc">None</span>
+	
+	<span class="k">def</span> <span class="nf">_make_ospray_object</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">ospNewCamera</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="p">)</span>
+	
+	<span class="n">pos</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f(a)&#39;</span><span class="p">)</span>
+	<span class="nb">dir</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f(a)&#39;</span><span class="p">)</span>
+	<span class="n">up</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec3f(a)&#39;</span><span class="p">)</span>
+	<span class="n">nearClip</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">imageStart</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec2f&#39;</span><span class="p">)</span>
+	<span class="n">imageEnd</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec2f&#39;</span><span class="p">)</span>
+	
+	<span class="k">def</span> <span class="nf">pick</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">renderer</span><span class="p">,</span> <span class="n">screenPos</span><span class="p">):</span>
+		<span class="c1"># TODO: Fix ospPick in SWIG configuration</span>
+		<span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+
+<div class="viewcode-block" id="PerspectiveCamera"><a class="viewcode-back" href="../index.html#pyospray.PerspectiveCamera">[docs]</a><span class="k">class</span> <span class="nc">PerspectiveCamera</span><span class="p">(</span><span class="n">Camera</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#perspective-camera</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;perspective&#39;</span>
+	
+	<span class="n">fovy</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">aspect</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">apertureRadius</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">focusDistance</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">architectural</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+	<span class="n">stereoMode</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+	<span class="n">interpupillaryDistance</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="OrthographicCamera"><a class="viewcode-back" href="../index.html#pyospray.OrthographicCamera">[docs]</a><span class="k">class</span> <span class="nc">OrthographicCamera</span><span class="p">(</span><span class="n">Camera</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#orthographic-camera</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;orthographic&#39;</span>
+	
+	<span class="n">height</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">aspect</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PanoramicCamera"><a class="viewcode-back" href="../index.html#pyospray.PanoramicCamera">[docs]</a><span class="k">class</span> <span class="nc">PanoramicCamera</span><span class="p">(</span><span class="n">Camera</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#panoramic-camera</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;panoramic&#39;</span></div>
+
+
+<div class="viewcode-block" id="FrameBuffer"><a class="viewcode-back" href="../index.html#pyospray.FrameBuffer">[docs]</a><span class="k">class</span> <span class="nc">FrameBuffer</span><span class="p">(</span><span class="n">ManagedObject</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#framebuffer</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">NONE</span> <span class="o">=</span> <span class="n">OSP_FB_NONE</span>
+	<span class="n">RGBA8</span> <span class="o">=</span> <span class="n">OSP_FB_RGBA8</span>
+	<span class="n">SRGBA</span> <span class="o">=</span> <span class="n">OSP_FB_SRGBA</span>
+	<span class="n">RGBA32F</span> <span class="o">=</span> <span class="n">OSP_FB_RGBA32F</span>
+	
+	<span class="n">COLOR</span> <span class="o">=</span> <span class="n">OSP_FB_COLOR</span>
+	<span class="n">DEPTH</span> <span class="o">=</span> <span class="n">OSP_FB_DEPTH</span>
+	<span class="n">ACCUM</span> <span class="o">=</span> <span class="n">OSP_FB_ACCUM</span>
+	<span class="n">VARIANCE</span> <span class="o">=</span> <span class="n">OSP_FB_VARIANCE</span>
+	<span class="n">NORMAL</span> <span class="o">=</span> <span class="n">OSP_FB_NORMAL</span>
+	<span class="n">ALBEDO</span> <span class="o">=</span> <span class="n">OSP_FB_ALBEDO</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="nb">format</span><span class="p">,</span> <span class="n">channels</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_size</span> <span class="o">=</span> <span class="n">size</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_format</span> <span class="o">=</span> <span class="nb">format</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_channels</span> <span class="o">=</span> <span class="n">channels</span>
+	
+	<span class="k">def</span> <span class="nf">_make_ospray_object</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">ospNewFrameBuffer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_channels</span><span class="p">)</span>
+	
+	<span class="k">def</span> <span class="nf">writePPM</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+		<span class="n">ospWritePPM</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ospray_object</span><span class="p">)</span>
+	
+	<span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channels</span><span class="p">):</span>
+		<span class="n">ospFrameBufferClear</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ospray_object</span><span class="p">,</span> <span class="n">channels</span><span class="p">)</span></div>
+	
+	<span class="c1"># TODO: Add map, unmap, and pixel op</span>
+
+
+<div class="viewcode-block" id="PixelOp"><a class="viewcode-back" href="../index.html#pyospray.PixelOp">[docs]</a><span class="k">class</span> <span class="nc">PixelOp</span><span class="p">(</span><span class="n">ManagedObject</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#pixel-operation</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="kc">None</span>
+	
+	<span class="k">def</span> <span class="nf">_make_ospray_object</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">ospNewPixelOp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ToneMapper"><a class="viewcode-back" href="../index.html#pyospray.ToneMapper">[docs]</a><span class="k">class</span> <span class="nc">ToneMapper</span><span class="p">(</span><span class="n">PixelOp</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#tone-mapper</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">variant</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;tonemapper&#39;</span>
+	
+	<span class="n">contrast</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">shoulder</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">midIn</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">midOut</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+	<span class="n">hdrMax</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Data"><a class="viewcode-back" href="../index.html#pyospray.Data">[docs]</a><span class="k">class</span> <span class="nc">Data</span><span class="p">(</span><span class="n">ManagedObject</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See `the documentation`__.</span>
+<span class="sd">	</span>
+<span class="sd">	__ https://www.ospray.org/documentation.html#data</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="n">DEVICE</span> <span class="o">=</span> <span class="n">OSP_DEVICE</span>
+	<span class="n">VOID_PTR</span> <span class="o">=</span> <span class="n">OSP_VOID_PTR</span>
+	<span class="n">DATA</span> <span class="o">=</span> <span class="n">OSP_DATA</span>
+	<span class="n">OBJECT</span> <span class="o">=</span> <span class="n">OSP_OBJECT</span>
+	<span class="n">CAMERA</span> <span class="o">=</span> <span class="n">OSP_CAMERA</span>
+	<span class="n">FRAMEBUFFER</span> <span class="o">=</span> <span class="n">OSP_FRAMEBUFFER</span>
+	<span class="n">LIGHT</span> <span class="o">=</span> <span class="n">OSP_LIGHT</span>
+	<span class="n">MATERIAL</span> <span class="o">=</span> <span class="n">OSP_MATERIAL</span>
+	<span class="n">TEXTURE</span> <span class="o">=</span> <span class="n">OSP_TEXTURE</span>
+	<span class="n">RENDERER</span> <span class="o">=</span> <span class="n">OSP_RENDERER</span>
+	<span class="n">MODEL</span> <span class="o">=</span> <span class="n">OSP_MODEL</span>
+	<span class="n">GEOMETRY</span> <span class="o">=</span> <span class="n">OSP_GEOMETRY</span>
+	<span class="n">VOLUME</span> <span class="o">=</span> <span class="n">OSP_VOLUME</span>
+	<span class="n">TRANSFER_FUNCTION</span> <span class="o">=</span> <span class="n">OSP_TRANSFER_FUNCTION</span>
+	<span class="n">PIXEL_OP</span> <span class="o">=</span> <span class="n">OSP_PIXEL_OP</span>
+	<span class="n">STRING</span> <span class="o">=</span> <span class="n">OSP_STRING</span>
+	<span class="n">CHAR</span> <span class="o">=</span> <span class="n">OSP_CHAR</span>
+	<span class="n">UCHAR</span> <span class="o">=</span> <span class="n">OSP_UCHAR</span>
+	<span class="n">UCHAR2</span> <span class="o">=</span> <span class="n">OSP_UCHAR2</span>
+	<span class="n">UCHAR3</span> <span class="o">=</span> <span class="n">OSP_UCHAR3</span>
+	<span class="n">UCHAR4</span> <span class="o">=</span> <span class="n">OSP_UCHAR4</span>
+	<span class="n">USHORT</span> <span class="o">=</span> <span class="n">OSP_USHORT</span>
+	<span class="n">INT</span> <span class="o">=</span> <span class="n">OSP_INT</span>
+	<span class="n">INT2</span> <span class="o">=</span> <span class="n">OSP_INT2</span>
+	<span class="n">INT3</span> <span class="o">=</span> <span class="n">OSP_INT3</span>
+	<span class="n">INT4</span> <span class="o">=</span> <span class="n">OSP_INT4</span>
+	<span class="n">UINT</span> <span class="o">=</span> <span class="n">OSP_UINT</span>
+	<span class="n">UINT2</span> <span class="o">=</span> <span class="n">OSP_UINT2</span>
+	<span class="n">UINT3</span> <span class="o">=</span> <span class="n">OSP_UINT3</span>
+	<span class="n">UINT4</span> <span class="o">=</span> <span class="n">OSP_UINT4</span>
+	<span class="n">LONG</span> <span class="o">=</span> <span class="n">OSP_LONG</span>
+	<span class="n">LONG2</span> <span class="o">=</span> <span class="n">OSP_LONG2</span>
+	<span class="n">LONG3</span> <span class="o">=</span> <span class="n">OSP_LONG3</span>
+	<span class="n">LONG4</span> <span class="o">=</span> <span class="n">OSP_LONG4</span>
+	<span class="n">ULONG</span> <span class="o">=</span> <span class="n">OSP_ULONG</span>
+	<span class="n">ULONG2</span> <span class="o">=</span> <span class="n">OSP_ULONG2</span>
+	<span class="n">ULONG3</span> <span class="o">=</span> <span class="n">OSP_ULONG3</span>
+	<span class="n">ULONG4</span> <span class="o">=</span> <span class="n">OSP_ULONG4</span>
+	<span class="n">FLOAT</span> <span class="o">=</span> <span class="n">OSP_FLOAT</span>
+	<span class="n">FLOAT2</span> <span class="o">=</span> <span class="n">OSP_FLOAT2</span>
+	<span class="n">FLOAT3</span> <span class="o">=</span> <span class="n">OSP_FLOAT3</span>
+	<span class="n">FLOAT4</span> <span class="o">=</span> <span class="n">OSP_FLOAT4</span>
+	<span class="n">FLOAT3A</span> <span class="o">=</span> <span class="n">OSP_FLOAT3A</span>
+	<span class="n">DOUBLE</span> <span class="o">=</span> <span class="n">OSP_DOUBLE</span>
+	
+	<span class="n">NONE</span> <span class="o">=</span> <span class="mi">0</span>
+	<span class="n">SHARED_BUFFER</span> <span class="o">=</span> <span class="n">OSP_DATA_SHARED_BUFFER</span>
+	
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">flags</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="nb">type</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">data</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_flags</span> <span class="o">=</span> <span class="n">flags</span>
+	
+	<span class="k">def</span> <span class="nf">_make_ospray_object</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">ospNewData</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flags</span><span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">_Builtin</span><span class="p">:</span>
+	<span class="sd">&quot;&quot;&quot;Expose provided color and opacity maps.</span>
+<span class="sd">	</span>
+<span class="sd">	Intended to be used like::</span>
+<span class="sd">	</span>
+<span class="sd">	  colormap = builtin.colormaps[&#39;coolToWarm&#39;]</span>
+<span class="sd">	  data = Data(Data.FLOAT, np.array(colormap), Data.NONE)</span>
+<span class="sd">	  </span>
+<span class="sd">	  opacity = builtin.opacitymaps[&#39;ramp&#39;]</span>
+<span class="sd">	  data = Data(Data.FLOAT, np.array(opacity), Data.NONE)</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="nd">@lazy_property</span>
+	<span class="k">def</span> <span class="nf">colormaps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Return a dictionary of colormaps.&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">load_colormaps</span><span class="p">()</span>
+	
+	<span class="nd">@lazy_property</span>
+	<span class="k">def</span> <span class="nf">opacitymaps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Return a dictionary of opacity maps.&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">load_opacitymaps</span><span class="p">()</span>
+
+
+<span class="n">builtin</span> <span class="o">=</span> <span class="n">_Builtin</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">pyospray</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Tanner Hobson.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

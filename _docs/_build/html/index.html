@@ -1,0 +1,510 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Welcome to pyospray’s documentation! &#8212; pyospray 20181228 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-pyospray-s-documentation">
+<h1>Welcome to pyospray’s documentation!<a class="headerlink" href="#welcome-to-pyospray-s-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<span class="target" id="module-pyospray"></span><p>Python wrapper around the OSPRay rendering library</p>
+<p>The main utility of this project is around creating and using the
+objects that OSPRay works with. This includes setting up Renderers,
+Models, Geometries, and Materials.</p>
+<p>Instead of the functional structure that OSPRay uses, this project uses
+a more Pythonic object-oriented interface. In essence, this means using
+<cite>obj.attr = value</cite> instead of <cite>set(obj, ‘attr’, value)</cite>.</p>
+<p>For more information on OSPRay and its capabilities, go to <a class="reference external" href="https://www.ospray.org/documentation.html">its
+website</a>.</p>
+<dl class="class">
+<dt id="pyospray.AMRVolume">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">AMRVolume</code><a class="reference internal" href="_modules/pyospray.html#AMRVolume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.AMRVolume" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#adaptive-mesh-refinement-amr-volume">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.AlloyMaterial">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">AlloyMaterial</code><span class="sig-paren">(</span><em>renderer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#AlloyMaterial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.AlloyMaterial" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#alloy">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.AmbientLight">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">AmbientLight</code><span class="sig-paren">(</span><em>renderer=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#AmbientLight"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.AmbientLight" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#ambient-light">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.Camera">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">Camera</code><a class="reference internal" href="_modules/pyospray.html#Camera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Camera" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#cameras">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.CarPaintMaterial">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">CarPaintMaterial</code><span class="sig-paren">(</span><em>renderer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#CarPaintMaterial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.CarPaintMaterial" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#carpaint">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.Committer">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">Committer</code><span class="sig-paren">(</span><em>type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#Committer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Committer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Automatical type-correct setters for managed objects.</p>
+<p>Intended to be used like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Foo</span><span class="p">(</span><span class="n">ManagedObject</span><span class="p">):</span>
+    <span class="n">myattr</span> <span class="o">=</span> <span class="n">Committer</span><span class="p">(</span><span class="s1">&#39;vec2f&#39;</span><span class="p">)</span>
+
+<span class="n">foo</span> <span class="o">=</span> <span class="n">Foo</span><span class="p">()</span>
+<span class="n">foo</span><span class="o">.</span><span class="n">myattr</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Which will function like the low level OSPRay code:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">foo</span> <span class="o">=</span> <span class="n">ospNewFoo</span><span class="p">()</span>
+<span class="n">setVec2f</span><span class="p">(</span><span class="n">foo</span><span class="p">,</span> <span class="s1">&#39;myattr&#39;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note: In the future, this may also set a dirty flag on the object
+so that commits aren’t missed.</p>
+<dl class="staticmethod">
+<dt id="pyospray.Committer.get_ospray_setter">
+<em class="property">static </em><code class="descname">get_ospray_setter</code><span class="sig-paren">(</span><em>type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#Committer.get_ospray_setter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Committer.get_ospray_setter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the appropriate low-level setter function.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="pyospray.Committer.normalize_name">
+<em class="property">static </em><code class="descname">normalize_name</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#Committer.normalize_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Committer.normalize_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Map Pythonic attribute names to OSPRay names.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.Curves">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">Curves</code><a class="reference internal" href="_modules/pyospray.html#Curves"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Curves" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#curves">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.Cylinders">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">Cylinders</code><a class="reference internal" href="_modules/pyospray.html#Cylinders"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Cylinders" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#cylinders">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.Data">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">Data</code><span class="sig-paren">(</span><em>type</em>, <em>data</em>, <em>flags</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#Data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Data" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#data">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.DirectionalLight">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">DirectionalLight</code><span class="sig-paren">(</span><em>renderer=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#DirectionalLight"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.DirectionalLight" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#directional-light-distant-light">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.FrameBuffer">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">FrameBuffer</code><span class="sig-paren">(</span><em>size</em>, <em>format</em>, <em>channels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#FrameBuffer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.FrameBuffer" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#framebuffer">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.Geometry">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">Geometry</code><a class="reference internal" href="_modules/pyospray.html#Geometry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Geometry" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#geometries">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.GlassMaterial">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">GlassMaterial</code><span class="sig-paren">(</span><em>renderer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#GlassMaterial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.GlassMaterial" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#glass">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.HDRILight">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">HDRILight</code><span class="sig-paren">(</span><em>renderer=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#HDRILight"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.HDRILight" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#hdri-light">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.Instance">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">Instance</code><span class="sig-paren">(</span><em>model</em>, <em>transform</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#Instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#instances">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.Isosurfaces">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">Isosurfaces</code><a class="reference internal" href="_modules/pyospray.html#Isosurfaces"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Isosurfaces" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#isosurfaces">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.Light">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">Light</code><span class="sig-paren">(</span><em>renderer=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#Light"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Light" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#lights">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.LuminousMaterial">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">LuminousMaterial</code><span class="sig-paren">(</span><em>renderer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#LuminousMaterial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.LuminousMaterial" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#luminous">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.ManagedObject">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">ManagedObject</code><a class="reference internal" href="_modules/pyospray.html#ManagedObject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.ManagedObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for all OSPRay objects</p>
+<p>Subclasses should override or extend the
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">_make_ospray_object()</span></code> method and return
+an appropriate OSPRay object (e.g. <cite>ospNewGeometry(…)</cite>).</p>
+<p>Any attributes that can be set (e.g. with <cite>ospSet3f(…)</cite> or
+similar methods) can use the <a class="reference internal" href="#pyospray.Committer" title="pyospray.Committer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Committer</span></code></a> descriptor
+in their class definition to automatically have getters/setters
+with the appropriate types.</p>
+<dl class="method">
+<dt id="pyospray.ManagedObject.commit">
+<code class="descname">commit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#ManagedObject.commit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.ManagedObject.commit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Commit any changes to OSPRay.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.ManagedObjectMeta">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">ManagedObjectMeta</code><a class="reference internal" href="_modules/pyospray.html#ManagedObjectMeta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.ManagedObjectMeta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Metaclass reserved for future use.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.Material">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">Material</code><span class="sig-paren">(</span><em>renderer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#Material"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Material" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#materials">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.MetalMaterial">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">MetalMaterial</code><span class="sig-paren">(</span><em>renderer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#MetalMaterial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.MetalMaterial" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#metal">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.MetallicPaintMaterial">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">MetallicPaintMaterial</code><span class="sig-paren">(</span><em>renderer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#MetallicPaintMaterial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.MetallicPaintMaterial" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#metallicpaint">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.Model">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">Model</code><a class="reference internal" href="_modules/pyospray.html#Model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Model" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#model">the documentation</a>.</p>
+<dl class="method">
+<dt id="pyospray.Model.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#Model.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Model.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an object to the model.</p>
+<p>This is either a <a class="reference internal" href="#pyospray.Geometry" title="pyospray.Geometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">Geometry</span></code></a> or a
+<a class="reference internal" href="#pyospray.Volume" title="pyospray.Volume"><code class="xref py py-class docutils literal notranslate"><span class="pre">Volume</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyospray.Model.remove">
+<code class="descname">remove</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#Model.remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Model.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove an object from the model.</p>
+<p>This is either a <a class="reference internal" href="#pyospray.Geometry" title="pyospray.Geometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">Geometry</span></code></a> or a
+<a class="reference internal" href="#pyospray.Volume" title="pyospray.Volume"><code class="xref py py-class docutils literal notranslate"><span class="pre">Volume</span></code></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.OBJMaterial">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">OBJMaterial</code><span class="sig-paren">(</span><em>renderer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#OBJMaterial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.OBJMaterial" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#obj-material">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.OrthographicCamera">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">OrthographicCamera</code><a class="reference internal" href="_modules/pyospray.html#OrthographicCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.OrthographicCamera" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#orthographic-camera">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.PanoramicCamera">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">PanoramicCamera</code><a class="reference internal" href="_modules/pyospray.html#PanoramicCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.PanoramicCamera" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#panoramic-camera">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.PathTracer">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">PathTracer</code><a class="reference internal" href="_modules/pyospray.html#PathTracer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.PathTracer" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#path-tracer">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.PerspectiveCamera">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">PerspectiveCamera</code><a class="reference internal" href="_modules/pyospray.html#PerspectiveCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.PerspectiveCamera" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#perspective-camera">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.PiecewiseLinear">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">PiecewiseLinear</code><a class="reference internal" href="_modules/pyospray.html#PiecewiseLinear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.PiecewiseLinear" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#transfer-function">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.PixelOp">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">PixelOp</code><a class="reference internal" href="_modules/pyospray.html#PixelOp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.PixelOp" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#pixel-operation">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.PointLight">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">PointLight</code><span class="sig-paren">(</span><em>renderer=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#PointLight"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.PointLight" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#point-light-sphere-light">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.PrincipledMaterial">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">PrincipledMaterial</code><span class="sig-paren">(</span><em>renderer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#PrincipledMaterial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.PrincipledMaterial" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#principled">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.QuadLight">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">QuadLight</code><span class="sig-paren">(</span><em>renderer=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#QuadLight"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.QuadLight" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#quad-light">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.QuadMesh">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">QuadMesh</code><a class="reference internal" href="_modules/pyospray.html#QuadMesh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.QuadMesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#quad-mesh">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.Renderer">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">Renderer</code><a class="reference internal" href="_modules/pyospray.html#Renderer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Renderer" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#renderer">the documentation</a>.</p>
+<dl class="method">
+<dt id="pyospray.Renderer.render">
+<code class="descname">render</code><span class="sig-paren">(</span><em>framebuffer</em>, <em>channels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#Renderer.render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Renderer.render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render to the given framebuffer and return variance.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.SciVis">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">SciVis</code><a class="reference internal" href="_modules/pyospray.html#SciVis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.SciVis" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#scivis-renderer">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.Slice">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">Slice</code><a class="reference internal" href="_modules/pyospray.html#Slice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Slice" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#slices">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.Spheres">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">Spheres</code><a class="reference internal" href="_modules/pyospray.html#Spheres"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Spheres" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#spheres">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.SpotLight">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">SpotLight</code><span class="sig-paren">(</span><em>renderer=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#SpotLight"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.SpotLight" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#spot-light">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.Streamlines">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">Streamlines</code><a class="reference internal" href="_modules/pyospray.html#Streamlines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Streamlines" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#streamlines">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.StructuredVolume">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">StructuredVolume</code><a class="reference internal" href="_modules/pyospray.html#StructuredVolume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.StructuredVolume" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#structured-volume">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.Texture">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">Texture</code><span class="sig-paren">(</span><em>size=None</em>, <em>format=None</em>, <em>source=None</em>, <em>flags=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#Texture"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Texture" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#texture">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.Texture2D">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">Texture2D</code><span class="sig-paren">(</span><em>size=None</em>, <em>format=None</em>, <em>source=None</em>, <em>flags=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#Texture2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Texture2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#texture2d">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.TextureVolume">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">TextureVolume</code><span class="sig-paren">(</span><em>size=None</em>, <em>format=None</em>, <em>source=None</em>, <em>flags=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#TextureVolume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.TextureVolume" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#texturevolume">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.ThinGlassMaterial">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">ThinGlassMaterial</code><span class="sig-paren">(</span><em>renderer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#ThinGlassMaterial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.ThinGlassMaterial" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#thinglass">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.ToneMapper">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">ToneMapper</code><a class="reference internal" href="_modules/pyospray.html#ToneMapper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.ToneMapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#tone-mapper">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.TransferFunction">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">TransferFunction</code><a class="reference internal" href="_modules/pyospray.html#TransferFunction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.TransferFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#transfer-function">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.TriangleMesh">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">TriangleMesh</code><a class="reference internal" href="_modules/pyospray.html#TriangleMesh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.TriangleMesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#triangle-mesh">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.UnstructuredVolume">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">UnstructuredVolume</code><a class="reference internal" href="_modules/pyospray.html#UnstructuredVolume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.UnstructuredVolume" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#unstructured-volumes">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.Volume">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">Volume</code><a class="reference internal" href="_modules/pyospray.html#Volume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.Volume" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://www.ospray.org/documentation.html#volumes">the documentation</a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyospray.committing">
+<code class="descclassname">pyospray.</code><code class="descname">committing</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#committing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.committing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Commit the object after the context manager block.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyospray.lazy_property">
+<em class="property">class </em><code class="descclassname">pyospray.</code><code class="descname">lazy_property</code><span class="sig-paren">(</span><em>fget</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#lazy_property"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.lazy_property" title="Permalink to this definition">¶</a></dt>
+<dd><p>meant to be used for lazy evaluation of an object attribute.
+property should represent non-mutable data, as it replaces itself.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyospray.releasing">
+<code class="descclassname">pyospray.</code><code class="descname">releasing</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyospray.html#releasing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyospray.releasing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Release the object after the context manager block.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">pyospray</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Tanner Hobson.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

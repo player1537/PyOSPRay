@@ -19,6 +19,11 @@ RUN python3.7 -m pip install .
 ENTRYPOINT []
 CMD []
 
+FROM builder AS docs
+
+RUN python3.7 -m pip install \
+	sphinx
+
 FROM builder AS user
 
 RUN python3.7 -m pip install \
